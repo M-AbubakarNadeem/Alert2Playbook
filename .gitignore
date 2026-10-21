@@ -1,0 +1,22 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+.venv/
+.venv-bench/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# large downloaded inputs, rebuilt by scripts/build_kb.py
+data/raw/
+
+# evaluation inputs contain real attack commands from Atomic Red Team: rebuilt
+# locally by eval/build_eval_set.py, never published
+eval/alerts.jsonl
+eval/results/triage-cache.json
+
+# vercel
+.vercel/
