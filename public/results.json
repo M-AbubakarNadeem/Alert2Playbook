@@ -1,0 +1,104 @@
+{
+ "date": "2026-10-22",
+ "tests": 19,
+ "live": {
+  "seconds": 7
+ },
+ "eval": {
+  "current": {
+   "alerts": 30,
+   "candidates": 25,
+   "recall": 83.3,
+   "exact1": 30.0,
+   "exact3": 46.7,
+   "family3": 60.0,
+   "median_seconds": 2.26,
+   "date": "2026-10-22"
+  },
+  "baseline": {
+   "alerts": 30,
+   "candidates": 15,
+   "recall": 69.0,
+   "exact1": 13.8,
+   "exact3": 41.4,
+   "family3": 58.6,
+   "median_seconds": 20.79,
+   "date": "2026-10-21"
+  }
+ },
+ "grounding": {
+  "cited": 96,
+  "valid": 96
+ },
+ "retrieval": {
+  "ks": [
+   10,
+   15,
+   20,
+   25,
+   30
+  ],
+  "rows": [
+   {
+    "name": "Keyword search only",
+    "values": [
+     64.3,
+     67.9,
+     71.4,
+     71.4,
+     71.4
+    ]
+   },
+   {
+    "name": "Meaning search only (Pinecone)",
+    "values": [
+     60.7,
+     64.3,
+     67.9,
+     75.0,
+     78.6
+    ]
+   },
+   {
+    "name": "Keyword + meaning together (used now)",
+    "values": [
+     57.1,
+     71.4,
+     71.4,
+     78.6,
+     82.1
+    ]
+   }
+  ]
+ },
+ "benchmark": {
+  "alerts": 7,
+  "columns": [
+   "LangGraph (this project)",
+   "CrewAI, same reply limits",
+   "CrewAI, bigger reply limits"
+  ],
+  "rows": [
+   [
+    "Finished the job",
+    "7 of 7",
+    "1 of 7",
+    "5 of 7"
+   ],
+   [
+    "Typical time per alert",
+    "7.2 s",
+    "9.2 s",
+    "22.9 s"
+   ],
+   [
+    "Tokens per alert",
+    "~11,684",
+    "~12,621",
+    "~21,161"
+   ]
+  ],
+  "mapping_agreement": 0.52,
+  "note": "CrewAI wraps every AI call in its own role, goal and 'Thought / Final Answer' text. With Groq's models that caused empty replies, answers cut off mid-JSON, and one model calling a tool when CrewAI had said not to. Bigger reply limits fixed most runs but doubled the tokens. Small sample: read it as a direction, not a verdict."
+ }
+}

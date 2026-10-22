@@ -1,0 +1,859 @@
+{
+ "alert": "[EDR] High severity - Suspicious recovery tampering\nTime: 2026-10-19T02:14:51Z  Host: WS-FIN-07 (Windows 11 Enterprise)  User: CORP\\svc_backup\nProcess chain: explorer.exe > cmd.exe > vssadmin.exe\nCommand line: vssadmin.exe delete shadows /all /quiet\nFollowed within 40s by:\n  wbadmin.exe delete catalog -quiet\n  bcdedit.exe /set {default} recoveryenabled No\nPrior activity (last 5 minutes): 312 files on \\\\FS-01\\finance$ rewritten over SMB and renamed to *.lockd; a file named HOW_TO_RESTORE_FILES.txt was created in every affected folder.",
+ "revisions": 0,
+ "steps": [
+  {
+   "node": "screen",
+   "ms": 192,
+   "score": 0.0028022367041558027,
+   "flagged": false
+  },
+  {
+   "node": "triage",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 1413,
+   "input_tokens": 1210,
+   "output_tokens": 420
+  },
+  {
+   "node": "retrieve",
+   "ms": 1419,
+   "mode": "hybrid (Pinecone dense + BM25, RRF)",
+   "queries": 12
+  },
+  {
+   "node": "map_attack",
+   "model": "openai/gpt-oss-20b",
+   "ms": 858,
+   "input_tokens": 1693,
+   "output_tokens": 218,
+   "rejected_ids": []
+  },
+  {
+   "node": "enrich",
+   "ms": 0,
+   "graph_nodes": 26
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 2984,
+   "input_tokens": 2323,
+   "output_tokens": 1085
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 359,
+   "input_tokens": 2014,
+   "output_tokens": 27,
+   "verdict": "approve"
+  }
+ ],
+ "guard": {
+  "score": 0.0028022367041558027,
+  "flagged": false
+ },
+ "triage": {
+  "summary": "On WS-FIN-07, the service account CORP\\svc_backup ran vssadmin, wbadmin and bcdedit to delete all volume shadow copies, wipe the Windows backup catalog and disable Windows recovery, immediately after 312 files on \\\\FS-01\\finance$ were encrypted/renamed to *.lockd and a ransom note (HOW_TO_RESTORE_FILES.txt) was dropped in each affected folder.",
+  "platform": "windows",
+  "severity": "critical",
+  "severity_reason": "Confirmed ransomware activity: mass file encryption on a finance share combined with deliberate destruction of all recovery options (shadow copies, backup catalog, Windows recovery) to maximize impact and prevent restoration.",
+  "behaviors": [
+   "encrypting files for impact on a network share",
+   "deleting volume shadow copies",
+   "deleting the Windows backup catalog",
+   "disabling Windows recovery via BCD",
+   "dropping a ransom note in affected folders"
+  ],
+  "technique_hints": [
+   "Data Encrypted for Impact",
+   "Indicator Removal: Clear Windows Event Logs",
+   "Inhibit System Recovery",
+   "File Deletion",
+   "Data from Information Repositories"
+  ],
+  "observables": {
+   "hosts": [
+    "WS-FIN-07",
+    "FS-01"
+   ],
+   "users": [
+    "CORP\\svc_backup"
+   ],
+   "processes": [
+    "explorer.exe",
+    "cmd.exe",
+    "vssadmin.exe",
+    "wbadmin.exe",
+    "bcdedit.exe",
+    "vssadmin.exe delete shadows /all /quiet",
+    "wbadmin.exe delete catalog -quiet",
+    "bcdedit.exe /set {default} recoveryenabled No"
+   ],
+   "files": [
+    "*.lockd",
+    "HOW_TO_RESTORE_FILES.txt",
+    "\\\\FS-01\\finance$"
+   ],
+   "network": [],
+   "registry": []
+  }
+ },
+ "candidates": [
+  {
+   "id": "T1486",
+   "name": "Data Encrypted for Impact",
+   "tactics": [
+    "impact"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1490",
+   "name": "Inhibit System Recovery",
+   "tactics": [
+    "impact"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1070.004",
+   "name": "Indicator Removal: File Deletion",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1213",
+   "name": "Data from Information Repositories",
+   "tactics": [
+    "collection"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T0811",
+   "name": "Data from Information Repositories",
+   "tactics": [
+    "collection"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T0809",
+   "name": "Data Destruction",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.1594,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1518.002",
+   "name": "Software Discovery: Backup Software Discovery",
+   "tactics": [
+    "discovery"
+   ],
+   "score": 0.1529,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1485",
+   "name": "Data Destruction",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.141,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1679",
+   "name": "Selective Exclusion",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.1298,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1070.005",
+   "name": "Indicator Removal: Network Share Connection Removal",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.1222,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1006",
+   "name": "Direct Volume Access",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.1199,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1685.005",
+   "name": "Disable or Modify Tools: Clear Windows Event Logs",
+   "tactics": [
+    "defense-impairment"
+   ],
+   "score": 0.1179,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1070.010",
+   "name": "Indicator Removal: Relocate Malware",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.1141,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1070.009",
+   "name": "Indicator Removal: Clear Persistence",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.1058,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1070.003",
+   "name": "Indicator Removal: Clear Command History",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.0964,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1070.006",
+   "name": "Indicator Removal: Timestomp",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.094,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.008",
+   "name": "Event Triggered Execution: Accessibility Features",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.0873,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1027.013",
+   "name": "Obfuscated Files or Information: Encrypted/Encoded File",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.0865,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1680",
+   "name": "Local Storage Discovery",
+   "tactics": [
+    "discovery"
+   ],
+   "score": 0.0864,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1489",
+   "name": "Service Stop",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.0863,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1529",
+   "name": "System Shutdown/Reboot",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.0854,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1021.002",
+   "name": "Remote Services: SMB/Windows Admin Shares",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.0836,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.003",
+   "name": "OS Credential Dumping: NTDS",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0835,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1543.003",
+   "name": "Create or Modify System Process: Windows Service",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0834,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1531",
+   "name": "Account Access Removal",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.0801,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  }
+ ],
+ "mapping": [
+  {
+   "technique_id": "T1486",
+   "confidence": "high",
+   "evidence": "312 files on \\FS-01\\finance$ rewritten over SMB and renamed to *.lockd",
+   "name": "Data Encrypted for Impact"
+  },
+  {
+   "technique_id": "T1490",
+   "confidence": "high",
+   "evidence": "vssadmin.exe delete shadows /all /quiet\n  wbadmin.exe delete catalog -quiet\n  bcdedit.exe /set {default} recoveryenabled No",
+   "name": "Inhibit System Recovery"
+  }
+ ],
+ "context": {
+  "techniques": [
+   {
+    "id": "T1486",
+    "name": "Data Encrypted for Impact",
+    "url": "https://attack.mitre.org/techniques/T1486/",
+    "domain": "enterprise",
+    "tactics": [
+     "impact"
+    ],
+    "platforms": [
+     "ESXi",
+     "IaaS",
+     "Linux",
+     "macOS",
+     "Windows"
+    ],
+    "description": "Adversaries may encrypt data on target systems or on large numbers of systems in a network to interrupt availability to system and network resources. They can attempt to render stored data inaccessible by encrypting files or data on local and remote drives and withholding access to a decryption key. This may be done in order to extract monetary compensation from a victim in exchange for decryption or a decryption key (ransomware) or to render data permanently inaccessible in cases where the key is not saved or transmitted. In the case of ransomware, it is typical that common user files like Office documents, PDFs, images, videos, audio, text, and source code files will be encrypted (and often renamed and/or tagged with specific file markers).",
+    "parent": null,
+    "used_by": 87,
+    "mitigations": [
+     {
+      "id": "M1040",
+      "name": "Behavior Prevention on Endpoint",
+      "description": "Behavior Prevention on Endpoint refers to the use of technologies and strategies to detect and block potentially malicious activities by analyzing the behavior of processes, files, API calls, and other endpoint events.",
+      "url": "https://attack.mitre.org/mitigations/M1040/"
+     },
+     {
+      "id": "M1053",
+      "name": "Data Backup",
+      "description": "Data Backup involves taking and securely storing backups of data from end-user systems and critical servers. It ensures that data remains available in the event of system compromise, ransomware attacks, or other disruptions.",
+      "url": "https://attack.mitre.org/mitigations/M1053/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0215",
+      "name": "Detection of Multi-Platform File Encryption for Impact",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "High-frequency file write operations using uncommon extensions, followed by ransom note creation, registry tampering, or shadow copy deletion. Often uses CLI tools like vssadmin, wbadmin, cipher, or PowerShell.",
+        "log_sources": [
+         "WinEventLog:Sysmon"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Encryption via custom or open-source tools (e.g., openssl, gpg, aescrypt) recursively targeting user or system directories. Also includes overwrite of existing data and ransom note drops.",
+        "log_sources": [
+         "auditd:SYSCALL"
+        ]
+       },
+       {
+        "platforms": [
+         "macOS"
+        ],
+        "description": "Userland or kernel-level ransomware encrypting user files (Documents, Desktop) using `srm`, `gpg`, or compiled payloads. Often correlated with ransom note creation in multiple directories.",
+        "log_sources": [
+         "macos:unifiedlog"
+        ]
+       },
+       {
+        "platforms": [
+         "ESXi"
+        ],
+        "description": "Ransomware encrypts .vmdk, .vmx, .log, or VM config files in VMFS datastores. May rename to .locked or delete/overwrite with encrypted versions. Often correlates with shell commands run through `dcui`, SSH, or vSphere.",
+        "log_sources": [
+         "esxi:shell",
+         "esxi:vmkernel"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0215/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-FA",
+       "name": "File Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileAnalysis/"
+      },
+      {
+       "id": "D3-FIM",
+       "name": "File Integrity Monitoring",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileIntegrityMonitoring/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-CF",
+       "name": "Content Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentFiltering/"
+      },
+      {
+       "id": "D3-CM",
+       "name": "Content Modification",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentModification/"
+      },
+      {
+       "id": "D3-CQ",
+       "name": "Content Quarantine",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentQuarantine/"
+      },
+      {
+       "id": "D3-LFP",
+       "name": "Local File Permissions",
+       "url": "https://d3fend.mitre.org/technique/d3f:LocalFilePermissions/"
+      },
+      {
+       "id": "D3-RFAM",
+       "name": "Remote File Access Mediation",
+       "url": "https://d3fend.mitre.org/technique/d3f:RemoteFileAccessMediation/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-FEV",
+       "name": "File Eviction",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileEviction/"
+      }
+     ],
+     "Restore": [
+      {
+       "id": "D3-RF",
+       "name": "Restore File",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreFile/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-FE",
+       "name": "File Encryption",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileEncryption/"
+      }
+     ],
+     "Deceive": [
+      {
+       "id": "D3-DF",
+       "name": "Decoy File",
+       "url": "https://d3fend.mitre.org/technique/d3f:DecoyFile/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1490",
+    "name": "Inhibit System Recovery",
+    "url": "https://attack.mitre.org/techniques/T1490/",
+    "domain": "enterprise",
+    "tactics": [
+     "impact"
+    ],
+    "platforms": [
+     "Containers",
+     "ESXi",
+     "IaaS",
+     "Linux",
+     "macOS",
+     "Network Devices",
+     "Windows"
+    ],
+    "description": "Adversaries may delete or remove built-in data and turn off services designed to aid in the recovery of a corrupted system to prevent recovery. This may deny access to available backups and recovery options. Operating systems may contain features that can help fix corrupted systems, such as a backup catalog, volume shadow copies, and automatic repair features. Adversaries may disable or delete system recovery features to augment the effects of Data Destruction and Data Encrypted for Impact. Furthermore, adversaries may disable recovery notifications, then corrupt backups.",
+    "parent": null,
+    "used_by": 57,
+    "mitigations": [
+     {
+      "id": "M1018",
+      "name": "User Account Management",
+      "description": "User Account Management involves implementing and enforcing policies for the lifecycle of user accounts, including creation, modification, and deactivation. Proper account management reduces the attack surface by limiting unauthorized access, managing account privileges, and ensuring accounts are used according to organizational policies.",
+      "url": "https://attack.mitre.org/mitigations/M1018/"
+     },
+     {
+      "id": "M1028",
+      "name": "Operating System Configuration",
+      "description": "Operating System Configuration involves adjusting system settings and hardening the default configurations of an operating system (OS) to mitigate adversary exploitation and prevent abuse of system functionality. Proper OS configurations address security vulnerabilities, limit attack surfaces, and ensure robust defense against a wide range of techniques.",
+      "url": "https://attack.mitre.org/mitigations/M1028/"
+     },
+     {
+      "id": "M1038",
+      "name": "Execution Prevention",
+      "description": "Prevent the execution of unauthorized or malicious code on systems by implementing application control, script blocking, and other execution prevention mechanisms. This ensures that only trusted and authorized code is executed, reducing the risk of malware and unauthorized actions.",
+      "url": "https://attack.mitre.org/mitigations/M1038/"
+     },
+     {
+      "id": "M1053",
+      "name": "Data Backup",
+      "description": "Data Backup involves taking and securely storing backups of data from end-user systems and critical servers. It ensures that data remains available in the event of system compromise, ransomware attacks, or other disruptions.",
+      "url": "https://attack.mitre.org/mitigations/M1053/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0329",
+      "name": "Behavioral Detection for T1490 - Inhibit System Recovery",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Process chains that use native utilities (vssadmin, wbadmin, diskshadow, bcdedit, REAgentC, wmic) with arguments to delete shadow copies, disable recovery, or remove backup catalogs",
+        "log_sources": [
+         "WinEventLog:Microsoft-Windows-Backup",
+         "WinEventLog:Sysmon",
+         "WinEventLog:System"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Shell utilities or scripts deleting `/etc/systemd/system/rescue.target`, `/etc/fstab` backups, or `/boot/efi` partitions; chattr used to block snapshot auto-recovery",
+        "log_sources": [
+         "auditd:CONFIG_CHANGE",
+         "auditd:SYSCALL"
+        ]
+       },
+       {
+        "platforms": [
+         "ESXi"
+        ],
+        "description": "ESXi shell or vim-cmd execution that deletes all VM snapshots using vmsvc/snapshot.removeall or rm on snapshot paths",
+        "log_sources": [
+         "esxi:hostd"
+        ]
+       },
+       {
+        "platforms": [
+         "Network Devices"
+        ],
+        "description": "Execution of `erase`, `format`, and `reload` in immediate sequence from a privileged AAA session",
+        "log_sources": [
+         "networkdevice:syslog"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0329/"
+     }
+    ],
+    "d3fend": {
+     "Restore": [
+      {
+       "id": "D3-RC",
+       "name": "Restore Configuration",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreConfiguration/"
+      },
+      {
+       "id": "D3-RS",
+       "name": "Restore Software",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreSoftware/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-SU",
+       "name": "Software Update",
+       "url": "https://d3fend.mitre.org/technique/d3f:SoftwareUpdate/"
+      }
+     ],
+     "Model": [
+      {
+       "id": "D3-AVE",
+       "name": "Asset Vulnerability Enumeration",
+       "url": "https://d3fend.mitre.org/technique/d3f:AssetVulnerabilityEnumeration/"
+      },
+      {
+       "id": "D3-CI",
+       "name": "Configuration Inventory",
+       "url": "https://d3fend.mitre.org/technique/d3f:ConfigurationInventory/"
+      },
+      {
+       "id": "D3-SWI",
+       "name": "Software Inventory",
+       "url": "https://d3fend.mitre.org/technique/d3f:SoftwareInventory/"
+      }
+     ]
+    }
+   }
+  ],
+  "allowed_refs": [
+   "D3-AVE",
+   "D3-CF",
+   "D3-CI",
+   "D3-CM",
+   "D3-CQ",
+   "D3-DF",
+   "D3-FA",
+   "D3-FE",
+   "D3-FEV",
+   "D3-FIM",
+   "D3-LFP",
+   "D3-RC",
+   "D3-RF",
+   "D3-RFAM",
+   "D3-RS",
+   "D3-SU",
+   "D3-SWI",
+   "DET0215",
+   "DET0329",
+   "M1018",
+   "M1028",
+   "M1038",
+   "M1040",
+   "M1053",
+   "T1486",
+   "T1490"
+  ]
+ },
+ "playbook": {
+  "title": "Response Playbook for Ransomware Activity on WS-FIN-07 and FS-01",
+  "executive_summary": "Critical ransomware encrypted 312 finance files and deleted all recovery mechanisms using svc_backup on WS-FIN-07. Immediate containment, evidence preservation, eradication, and recovery steps are required, followed by hardening to prevent recurrence.",
+  "detection_and_analysis": [
+   {
+    "action": "Collect volatile memory and process list from WS-FIN-07",
+    "detail": "Use a trusted forensic tool to acquire RAM image and enumerate running processes, focusing on explorer.exe, cmd.exe, vssadmin.exe, wbadmin.exe, bcdedit.exe.",
+    "references": []
+   },
+   {
+    "action": "Gather relevant Windows event logs",
+    "detail": "Pull Sysmon, Microsoft-Windows-Backup, and System logs for the timeframe 02:10\u201102:20Z to capture the command executions and shadow copy deletions.",
+    "references": [
+     "DET0215",
+     "DET0329"
+    ]
+   },
+   {
+    "action": "Query SMB access logs on FS-01",
+    "detail": "Review file share audit logs for \\FS-01\\finance$ to identify the svc_backup account's file writes, renames to *.lockd, and creation of HOW_TO_RESTORE_FILES.txt.",
+    "references": [
+     "DET0215"
+    ]
+   }
+  ],
+  "containment": [
+   {
+    "action": "Isolate WS-FIN-07 from the corporate network",
+    "detail": "Move the host to a quarantine VLAN and disable its network adapters to stop further spread.",
+    "references": []
+   },
+   {
+    "action": "Disable the svc_backup account",
+    "detail": "Temporarily lock the CORP\\svc_backup account and remove its local admin rights.",
+    "references": [
+     "M1018"
+    ]
+   },
+   {
+    "action": "Block SMB write access to \\FS-01\\finance$ for all non\u2011essential accounts",
+    "detail": "Apply a temporary share permission change to prevent additional encryption attempts.",
+    "references": [
+     "M1028"
+    ]
+   }
+  ],
+  "eradication": [
+   {
+    "action": "Terminate malicious processes and delete malicious scheduled tasks",
+    "detail": "Kill any lingering vssadmin.exe, wbadmin.exe, bcdedit.exe instances and remove tasks created by the ransomware.",
+    "references": [
+     "M1038"
+    ]
+   },
+   {
+    "action": "Remove ransomware binaries and scripts",
+    "detail": "Search the filesystem on WS-FIN-07 and FS-01 for unknown executables or PowerShell scripts and delete them.",
+    "references": [
+     "M1040"
+    ]
+   }
+  ],
+  "recovery": [
+   {
+    "action": "Restore shadow copies and backup catalog from offline media",
+    "detail": "Use known good backup media to recreate volume shadow copies and re\u2011enable Windows recovery via bcdedit.",
+    "references": [
+     "M1053"
+    ]
+   },
+   {
+    "action": "Recover encrypted files from backups",
+    "detail": "Restore the 312 affected finance files from the latest clean backup and verify integrity.",
+    "references": [
+     "M1053"
+    ]
+   },
+   {
+    "action": "Re\u2011enable the svc_backup account with least\u2011privilege rights",
+    "detail": "After verification, re\u2011activate the account with only required permissions and audit its activity.",
+    "references": [
+     "M1018"
+    ]
+   }
+  ],
+  "hardening": [
+   {
+    "action": "Implement application control to block native backup utilities",
+    "detail": "Deploy Windows AppLocker or similar to restrict vssadmin.exe, wbadmin.exe, and bcdedit.exe to authorized admin accounts.",
+    "references": [
+     "M1038"
+    ]
+   },
+   {
+    "action": "Enforce regular offline backups and test restore procedures",
+    "detail": "Schedule immutable, air\u2011gapped backups for finance data and conduct quarterly restore drills.",
+    "references": [
+     "M1053"
+    ]
+   },
+   {
+    "action": "Enable file integrity monitoring on critical shares",
+    "detail": "Deploy D3-FIM to alert on unexpected file renames to *.lockd and creation of ransom notes.",
+    "references": [
+     "D3-FIM"
+    ]
+   }
+  ],
+  "hunt_leads": [
+   {
+    "log_source": "WinEventLog:Sysmon",
+    "look_for": "Process creation events where parent is explorer.exe or cmd.exe and child is vssadmin.exe, wbadmin.exe, or bcdedit.exe with delete or disable arguments."
+   },
+   {
+    "log_source": "WinEventLog:Microsoft-Windows-Backup",
+    "look_for": "Events indicating shadow copy deletion or backup catalog removal."
+   },
+   {
+    "log_source": "SMB Share Audit on FS-01",
+    "look_for": "Bulk file rename operations to *.lockd and creation of HOW_TO_RESTORE_FILES.txt by CORP\\svc_backup."
+   }
+  ]
+ },
+ "review": {
+  "verdict": "approve",
+  "issues": [],
+  "auto_issues": []
+ },
+ "status": "awaiting_analyst",
+ "saved_at": "2026-10-22"
+}

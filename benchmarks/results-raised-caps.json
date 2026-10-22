@@ -1,0 +1,127 @@
+{
+ "summary": {
+  "date": "2026-10-22",
+  "alerts": 7,
+  "models": {
+   "triage": "qwen/qwen3.8-27b",
+   "mapper": "openai/gpt-oss-20b",
+   "writer": "openai/gpt-oss-120b",
+   "critic": "qwen/qwen3.8-27b"
+  },
+  "crewai_caps": {
+   "triage": 1000,
+   "mapper": 1800,
+   "writer": 6000,
+   "critic": 1000
+  },
+  "langgraph": null,
+  "crewai": {
+   "runs": 5,
+   "failures": 2,
+   "median_seconds": 22.88,
+   "mean_tokens": 21161,
+   "mean_llm_steps": 4.4,
+   "approved": 4,
+   "mean_references": 32.6
+  },
+  "mapping_jaccard": null
+ },
+ "runs": [
+  {
+   "id": "ransomware-precursor",
+   "crewai": {
+    "seconds": 14.32,
+    "tokens": 14274,
+    "llm_steps": 4,
+    "llm_requests": 4,
+    "mapping": [
+     "T1486",
+     "T1490"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 35
+   }
+  },
+  {
+   "id": "scheduled-task-persistence",
+   "crewai": {
+    "seconds": 28.15,
+    "tokens": 41966,
+    "llm_steps": 6,
+    "llm_requests": 11,
+    "mapping": [
+     "T1053.005",
+     "T1701.001",
+     "T1027.013"
+    ],
+    "verdict": "revise",
+    "revisions": 1,
+    "references": 31
+   }
+  },
+  {
+   "id": "linux-webshell-cron",
+   "crewai": {
+    "seconds": 20.03,
+    "tokens": 15627,
+    "llm_steps": 4,
+    "llm_requests": 4,
+    "mapping": [
+     "T1053.003",
+     "T1505.003",
+     "T1105"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 29
+   }
+  },
+  {
+   "id": "lsass-access",
+   "crewai": {
+    "seconds": 27.53,
+    "tokens": 16103,
+    "llm_steps": 4,
+    "llm_requests": 4,
+    "mapping": [
+     "T1003.001",
+     "T1021.001",
+     "T1078.002"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 42
+   }
+  },
+  {
+   "id": "cloud-key-abuse",
+   "crewai": {
+    "seconds": 22.88,
+    "tokens": 17836,
+    "llm_steps": 4,
+    "llm_requests": 5,
+    "mapping": [
+     "T1098.001",
+     "T1586.003",
+     "T1078.004"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 26
+   }
+  },
+  {
+   "id": "ics-setpoint-write",
+   "crewai": {
+    "error": "BadRequestError: Error code: 400 - {'error': {'message': 'Tool choice is none, but model called a tool', 'type': 'invalid_request_error', 'code': 'tool_use_failed', 'failed_generation': '{\"name\": \"Answer\", \"arguments\": {\\n  \"title\": \"Unauthorized PLC Parameter Modification and Logic Edit \u2013 Water Treatment Plant\",\\n "
+   }
+  },
+  {
+   "id": "prompt-injection",
+   "crewai": {
+    "error": "ValueError: Invalid response from LLM call - None or empty."
+   }
+  }
+ ]
+}

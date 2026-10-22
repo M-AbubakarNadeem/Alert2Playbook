@@ -1,0 +1,87 @@
+{
+ "summary": {
+  "date": "2026-10-22",
+  "alerts": 4,
+  "models": {
+   "triage": "qwen/qwen3.8-27b",
+   "mapper": "openai/gpt-oss-20b",
+   "writer": "openai/gpt-oss-120b",
+   "critic": "qwen/qwen3.8-27b"
+  },
+  "crewai_caps": {
+   "triage": 1000,
+   "mapper": 1800,
+   "writer": 6000,
+   "critic": 1000
+  },
+  "langgraph": null,
+  "crewai": {
+   "runs": 3,
+   "failures": 1,
+   "median_seconds": 39.95,
+   "mean_tokens": 19266,
+   "mean_llm_steps": 4,
+   "approved": 3,
+   "mean_references": 28.7
+  },
+  "mapping_jaccard": null
+ },
+ "runs": [
+  {
+   "id": "ransomware-precursor",
+   "crewai": {
+    "error": "APIStatusError: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_<redacted>` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 8197, please reduce your message size and try again. Need more tokens? Upgrade to Dev"
+   }
+  },
+  {
+   "id": "scheduled-task-persistence",
+   "crewai": {
+    "seconds": 38.68,
+    "tokens": 14657,
+    "llm_steps": 4,
+    "llm_requests": 4,
+    "mapping": [
+     "T1053.005",
+     "T1059.001",
+     "T1027.013"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 26
+   }
+  },
+  {
+   "id": "linux-webshell-cron",
+   "crewai": {
+    "seconds": 39.95,
+    "tokens": 16255,
+    "llm_steps": 4,
+    "llm_requests": 4,
+    "mapping": [
+     "T1053.003",
+     "T1105",
+     "T1059.004"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 31
+   }
+  },
+  {
+   "id": "lsass-access",
+   "crewai": {
+    "seconds": 112.35,
+    "tokens": 26887,
+    "llm_steps": 4,
+    "llm_requests": 6,
+    "mapping": [
+     "T1003.001",
+     "T1021.001"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 29
+   }
+  }
+ ]
+}

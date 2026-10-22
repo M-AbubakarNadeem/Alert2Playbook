@@ -1,0 +1,445 @@
+{
+ "summary": {
+  "retrieval": "hybrid (Pinecone dense + BM25, RRF)",
+  "models": {
+   "triage": "qwen/qwen3.8-27b",
+   "mapper": "openai/gpt-oss-20b"
+  },
+  "alerts": 30,
+  "errors": 0,
+  "candidates": 25,
+  "candidate_recall@25": 83.3,
+  "exact@1": 30.0,
+  "exact@3": 46.7,
+  "family@3": 60.0,
+  "median_seconds": 2.26,
+  "mean_tokens": 3344,
+  "date": "2026-10-22"
+ },
+ "alerts": [
+  {
+   "id": "art-000",
+   "gold": "T1125",
+   "mapped": [
+    "T1112",
+    "T1059.003"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 4.34,
+   "tokens": 3547
+  },
+  {
+   "id": "art-001",
+   "gold": "T1090.001",
+   "mapped": [
+    "T1059.001",
+    "T1090.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 9.26,
+   "tokens": 2784
+  },
+  {
+   "id": "art-002",
+   "gold": "T1552.005",
+   "mapped": [
+    "T1552.005"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 4.36,
+   "tokens": 3850
+  },
+  {
+   "id": "art-003",
+   "gold": "T1553.006",
+   "mapped": [
+    "T1553.006",
+    "T1059.003"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 1.78,
+   "tokens": 3103
+  },
+  {
+   "id": "art-004",
+   "gold": "T1016.002",
+   "mapped": [
+    "T1016.002"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 1.91,
+   "tokens": 3181
+  },
+  {
+   "id": "art-005",
+   "gold": "T1059",
+   "mapped": [
+    "T1059.001",
+    "T1059.010"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 2.5,
+   "tokens": 3249
+  },
+  {
+   "id": "art-006",
+   "gold": "T1567.003",
+   "mapped": [
+    "T1567.003",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 1.77,
+   "tokens": 3623
+  },
+  {
+   "id": "art-007",
+   "gold": "T1491.001",
+   "mapped": [
+    "T1021.004",
+    "T1059.003",
+    "T1675"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.61,
+   "tokens": 3406
+  },
+  {
+   "id": "art-008",
+   "gold": "T1195.002",
+   "mapped": [
+    "T1059.013",
+    "T1677"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.29,
+   "tokens": 3326
+  },
+  {
+   "id": "art-009",
+   "gold": "T1091",
+   "mapped": [
+    "T1059.001",
+    "T1680",
+    "T1091"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 2.21,
+   "tokens": 3427
+  },
+  {
+   "id": "art-010",
+   "gold": "T1505.005",
+   "mapped": [
+    "T1222.001",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 4.3,
+   "tokens": 3849
+  },
+  {
+   "id": "art-011",
+   "gold": "T1546.003",
+   "mapped": [
+    "T1546.003",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 4.24,
+   "tokens": 3408
+  },
+  {
+   "id": "art-012",
+   "gold": "T1595.003",
+   "mapped": [
+    "T1059.001",
+    "T1595.003",
+    "T1005"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 3.46,
+   "tokens": 3440
+  },
+  {
+   "id": "art-013",
+   "gold": "T1218.002",
+   "mapped": [
+    "T1218.002",
+    "T1036.005"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 2.05,
+   "tokens": 3248
+  },
+  {
+   "id": "art-014",
+   "gold": "T1056.002",
+   "mapped": [
+    "T1056.002",
+    "T1059.002"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 2.12,
+   "tokens": 3207
+  },
+  {
+   "id": "art-015",
+   "gold": "T1132.001",
+   "mapped": [
+    "T1059.004",
+    "T1132.002",
+    "T1048"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 1.82,
+   "tokens": 3185
+  },
+  {
+   "id": "art-016",
+   "gold": "T1003.006",
+   "mapped": [
+    "T1087.002",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 1.71,
+   "tokens": 3208
+  },
+  {
+   "id": "art-017",
+   "gold": "T1689",
+   "mapped": [
+    "T1059.001",
+    "T1675",
+    "T1078.003"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.06,
+   "tokens": 3300
+  },
+  {
+   "id": "art-018",
+   "gold": "T1049",
+   "mapped": [
+    "T1049"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 1.57,
+   "tokens": 3053
+  },
+  {
+   "id": "art-019",
+   "gold": "T1569.001",
+   "mapped": [
+    "T1569.001",
+    "T1059.004"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 1.67,
+   "tokens": 3071
+  },
+  {
+   "id": "art-020",
+   "gold": "T1030",
+   "mapped": [
+    "T1059.001",
+    "T1048.003",
+    "T1005"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 1.97,
+   "tokens": 3515
+  },
+  {
+   "id": "art-021",
+   "gold": "T1496",
+   "mapped": [
+    "T1059.001",
+    "T1496.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 1.87,
+   "tokens": 3377
+  },
+  {
+   "id": "art-022",
+   "gold": "T1566.001",
+   "mapped": [
+    "T1059.001",
+    "T1105",
+    "T1204.002"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.21,
+   "tokens": 3436
+  },
+  {
+   "id": "art-023",
+   "gold": "T1021.005",
+   "mapped": [
+    "T1219.002"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 5.71,
+   "tokens": 3331
+  },
+  {
+   "id": "art-024",
+   "gold": "T1505.002",
+   "mapped": [
+    "T1059.001",
+    "T1505.002"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 2.36,
+   "tokens": 3475
+  },
+  {
+   "id": "art-025",
+   "gold": "T1098",
+   "mapped": [
+    "T1136.002",
+    "T1098.007",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 3.35,
+   "tokens": 3531
+  },
+  {
+   "id": "art-026",
+   "gold": "T1592.001",
+   "mapped": [
+    "T1059.001",
+    "T1082"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 6.45,
+   "tokens": 2950
+  },
+  {
+   "id": "art-027",
+   "gold": "T1055.003",
+   "mapped": [
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.49,
+   "tokens": 3397
+  },
+  {
+   "id": "art-028",
+   "gold": "T1114.001",
+   "mapped": [
+    "T1059.001",
+    "T1114.001",
+    "T1074.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 2.47,
+   "tokens": 3356
+  },
+  {
+   "id": "art-029",
+   "gold": "T1071",
+   "mapped": [
+    "T1134.004",
+    "T0885"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.23,
+   "tokens": 3488
+  }
+ ]
+}

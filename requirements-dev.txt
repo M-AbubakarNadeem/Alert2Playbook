@@ -1,0 +1,7 @@
+-r requirements.txt
+uvicorn==0.54.0
+mcp[cli]==2.3.0
+httpx==0.28.1
+pyyaml==6.0.3
+python-dotenv==1.2.4
+pytest

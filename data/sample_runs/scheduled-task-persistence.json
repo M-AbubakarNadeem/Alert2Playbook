@@ -1,0 +1,912 @@
+{
+ "alert": "Sysmon EventID 1 (Process Create)\nUtcTime: 2026-10-20 09:31:07.412\nComputer: HR-LAPTOP-22.corp.local\nUser: CORP\\a.khan\nParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\nImage: C:\\Windows\\System32\\schtasks.exe\nCommandLine: schtasks /create /tn \"OneDriveUpdateCore\" /tr \"powershell.exe -nop -w hidden -enc SQBFAFgA...\" /sc onlogon /ru SYSTEM /f\nSecurity EventID 4698: A scheduled task was created. Task Name: \\OneDriveUpdateCore",
+ "revisions": 0,
+ "steps": [
+  {
+   "node": "screen",
+   "ms": 190,
+   "score": 0.0010179519886150956,
+   "flagged": false
+  },
+  {
+   "node": "triage",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 1150,
+   "input_tokens": 1203,
+   "output_tokens": 383
+  },
+  {
+   "node": "retrieve",
+   "ms": 1199,
+   "mode": "hybrid (Pinecone dense + BM25, RRF)",
+   "queries": 10
+  },
+  {
+   "node": "map_attack",
+   "model": "openai/gpt-oss-20b",
+   "ms": 522,
+   "input_tokens": 1776,
+   "output_tokens": 174,
+   "rejected_ids": []
+  },
+  {
+   "node": "enrich",
+   "ms": 0,
+   "graph_nodes": 43
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 2799,
+   "input_tokens": 2427,
+   "output_tokens": 1110
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 3368,
+   "input_tokens": 2017,
+   "output_tokens": 27,
+   "verdict": "approve"
+  }
+ ],
+ "guard": {
+  "score": 0.0010179519886150956,
+  "flagged": false
+ },
+ "triage": {
+  "summary": "User CORP\\a.khan on HR-LAPTOP-22.corp.local used PowerShell to create a scheduled task named \"OneDriveUpdateCore\" that runs a hidden, encoded PowerShell command as SYSTEM at every logon, a common persistence mechanism.",
+  "platform": "windows",
+  "severity": "high",
+  "severity_reason": "The task grants SYSTEM-level execution of an obfuscated payload at every logon, providing durable persistence and privilege escalation on the host.",
+  "behaviors": [
+   "creating a scheduled task for persistence",
+   "running a hidden, encoded PowerShell command",
+   "executing a task as SYSTEM for privilege escalation",
+   "using a legitimate Windows utility (schtasks) to establish persistence"
+  ],
+  "technique_hints": [
+   "Scheduled Task/Job: Scheduled Task",
+   "Command and Scripting Interpreter: PowerShell",
+   "Obfuscated Files or Information: Encoded Command",
+   "Privilege Escalation: Scheduled Task"
+  ],
+  "observables": {
+   "hosts": [
+    "HR-LAPTOP-22.corp.local"
+   ],
+   "users": [
+    "CORP\\a.khan",
+    "SYSTEM"
+   ],
+   "processes": [
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "C:\\Windows\\System32\\schtasks.exe",
+    "schtasks /create /tn \"OneDriveUpdateCore\" /tr \"powershell.exe -nop -w hidden -enc SQBFAFgA...\" /sc onlogon /ru SYSTEM /f"
+   ],
+   "files": [],
+   "network": [],
+   "registry": []
+  }
+ },
+ "candidates": [
+  {
+   "id": "T1053.005",
+   "name": "Scheduled Task/Job: Scheduled Task",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1059.001",
+   "name": "Command and Scripting Interpreter: PowerShell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1701.001",
+   "name": "Command and Scripting Interpreter: PowerShell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1053.002",
+   "name": "Scheduled Task/Job: At",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.2119,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053",
+   "name": "Scheduled Task/Job",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.2012,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053.003",
+   "name": "Scheduled Task/Job: Cron",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1832,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053.006",
+   "name": "Scheduled Task/Job: Systemd Timers",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1321,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.013",
+   "name": "Event Triggered Execution: PowerShell Profile",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.1107,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053.007",
+   "name": "Scheduled Task/Job: Container Orchestration Job",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1072,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.008",
+   "name": "Event Triggered Execution: Accessibility Features",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.0979,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.003",
+   "name": "Event Triggered Execution: Windows Management Instrumentation Event Subscription",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.0945,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.002",
+   "name": "Event Triggered Execution: Screensaver",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.0826,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.012",
+   "name": "Event Triggered Execution: Image File Execution Options Injection",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.082,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1547.014",
+   "name": "Boot or Logon Autostart Execution: Active Setup",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.081,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1036.004",
+   "name": "Masquerading: Masquerade Task or Service",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.0809,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1543.004",
+   "name": "Create or Modify System Process: Launch Daemon",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0792,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1037.001",
+   "name": "Boot or Logon Initialization Scripts: Logon Script (Windows)",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0745,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1029",
+   "name": "Scheduled Transfer",
+   "tactics": [
+    "exfiltration"
+   ],
+   "score": 0.0729,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1216.002",
+   "name": "System Script Proxy Execution: SyncAppvPublishingServer",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.0719,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1543.003",
+   "name": "Create or Modify System Process: Windows Service",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0685,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1547.001",
+   "name": "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0662,
+   "sources": [
+    "dense"
+   ]
+  },
+  {
+   "id": "T1037.003",
+   "name": "Boot or Logon Initialization Scripts: Network Logon Script",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0628,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0890",
+   "name": "Exploitation for Privilege Escalation",
+   "tactics": [
+    "privilege-escalation"
+   ],
+   "score": 0.0626,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1068",
+   "name": "Exploitation for Privilege Escalation",
+   "tactics": [
+    "privilege-escalation"
+   ],
+   "score": 0.0624,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1027.003",
+   "name": "Obfuscated Files or Information: Steganography",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.0614,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  }
+ ],
+ "mapping": [
+  {
+   "technique_id": "T1053.005",
+   "confidence": "high",
+   "evidence": "schtasks /create /tn \"OneDriveUpdateCore\" /tr \"powershell.exe -nop -w hidden -enc SQBFAFgA...\" /sc onlogon /ru SYSTEM /f",
+   "name": "Scheduled Task/Job: Scheduled Task"
+  },
+  {
+   "technique_id": "T1059.001",
+   "confidence": "medium",
+   "evidence": "ParentImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+   "name": "Command and Scripting Interpreter: PowerShell"
+  }
+ ],
+ "context": {
+  "techniques": [
+   {
+    "id": "T1053.005",
+    "name": "Scheduled Task/Job: Scheduled Task",
+    "url": "https://attack.mitre.org/techniques/T1053/005/",
+    "domain": "enterprise",
+    "tactics": [
+     "execution",
+     "persistence",
+     "privilege-escalation"
+    ],
+    "platforms": [
+     "Windows"
+    ],
+    "description": "Adversaries may abuse the Windows Task Scheduler to perform task scheduling for initial or recurring execution of malicious code. There are multiple ways to access the Task Scheduler in Windows. The schtasks utility can be run directly on the command line, or the Task Scheduler can be opened through the GUI within the Administrator Tools section of the Control Panel. In some cases, adversaries have used a .NET wrapper for the Windows Task Scheduler, and alternatively, adversaries have used the Windows netapi32 library and Windows Management Instrumentation (WMI) to create a scheduled task. Adversaries may also utilize the Powershell Cmdlet `Invoke-CimMethod`, which leverages WMI class `PS_ScheduledTask` to create a scheduled task via an XML path. An adversary may use Windows Task Scheduler to execute programs at system startup or on a scheduled basis for persistence.",
+    "parent": "T1053",
+    "used_by": 193,
+    "mitigations": [
+     {
+      "id": "M1018",
+      "name": "User Account Management",
+      "description": "User Account Management involves implementing and enforcing policies for the lifecycle of user accounts, including creation, modification, and deactivation. Proper account management reduces the attack surface by limiting unauthorized access, managing account privileges, and ensuring accounts are used according to organizational policies.",
+      "url": "https://attack.mitre.org/mitigations/M1018/"
+     },
+     {
+      "id": "M1026",
+      "name": "Privileged Account Management",
+      "description": "Privileged Account Management focuses on implementing policies, controls, and tools to securely manage privileged accounts (e.g., SYSTEM, root, or administrative accounts).",
+      "url": "https://attack.mitre.org/mitigations/M1026/"
+     },
+     {
+      "id": "M1028",
+      "name": "Operating System Configuration",
+      "description": "Operating System Configuration involves adjusting system settings and hardening the default configurations of an operating system (OS) to mitigate adversary exploitation and prevent abuse of system functionality. Proper OS configurations address security vulnerabilities, limit attack surfaces, and ensure robust defense against a wide range of techniques.",
+      "url": "https://attack.mitre.org/mitigations/M1028/"
+     },
+     {
+      "id": "M1047",
+      "name": "Audit",
+      "description": "Auditing is the process of recording activity and systematically reviewing and analyzing the activity and system configurations. The primary purpose of auditing is to detect anomalies and identify potential threats or weaknesses in the environment. Proper auditing configurations can also help to meet compliance requirements.",
+      "url": "https://attack.mitre.org/mitigations/M1047/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0441",
+      "name": "Detection of Suspicious Scheduled Task Creation and Execution on Windows",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Detects the creation, modification, or deletion of scheduled tasks through Task Scheduler, WMI, PowerShell, or API-based methods followed by execution from svchost.exe or taskeng.exe. Includes detection of hidden or anomalous scheduled tasks, especially those created under SYSTEM or suspicious user contexts.",
+        "log_sources": [
+         "WinEventLog:Security",
+         "WinEventLog:Sysmon"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0441/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-PLA",
+       "name": "Process Lineage Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessLineageAnalysis/"
+      },
+      {
+       "id": "D3-PSA",
+       "name": "Process Spawn Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSpawnAnalysis/"
+      },
+      {
+       "id": "D3-PSMD",
+       "name": "Process Self-Modification Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection/"
+      },
+      {
+       "id": "D3-SCA",
+       "name": "System Call Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallAnalysis/"
+      },
+      {
+       "id": "D3-SDM",
+       "name": "System Daemon Monitoring",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemDaemonMonitoring/"
+      },
+      {
+       "id": "D3-SJA",
+       "name": "Scheduled Job Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ScheduledJobAnalysis/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-ABPI",
+       "name": "Application-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Application-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-EAL",
+       "name": "Executable Allowlisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableAllowlisting/"
+      },
+      {
+       "id": "D3-EDL",
+       "name": "Executable Denylisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableDenylisting/"
+      },
+      {
+       "id": "D3-HBPI",
+       "name": "Hardware-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Hardware-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-KBPI",
+       "name": "Kernel-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Kernel-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-SCF",
+       "name": "System Call Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallFiltering/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-HR",
+       "name": "Host Reboot",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostReboot/"
+      },
+      {
+       "id": "D3-HS",
+       "name": "Host Shutdown",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostShutdown/"
+      },
+      {
+       "id": "D3-PS",
+       "name": "Process Suspension",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSuspension/"
+      },
+      {
+       "id": "D3-PT",
+       "name": "Process Termination",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessTermination/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1059.001",
+    "name": "Command and Scripting Interpreter: PowerShell",
+    "url": "https://attack.mitre.org/techniques/T1059/001/",
+    "domain": "enterprise",
+    "tactics": [
+     "execution"
+    ],
+    "platforms": [
+     "Windows",
+     "Linux",
+     "macOS"
+    ],
+    "description": "Adversaries may abuse PowerShell commands and scripts for execution. PowerShell is a powerful interactive command-line interface and scripting environment included in the Windows operating system. PowerShell can also be installed on Linux and macOS. Adversaries can use PowerShell to perform a number of actions, including discovery of information and execution of code. Examples include the Start-Process cmdlet which can be used to run an executable and the Invoke-Command cmdlet which runs a command locally or on a remote computer (though administrator permissions are required to use PowerShell to connect to remote systems). PowerShell may also be used to download and run executables from the Internet, which can be executed from disk or in memory without touching disk. A number of PowerShell-based offensive testing tools are available, including Empire, PowerSploit, PoshC2, and PSAttack.",
+    "parent": "T1059",
+    "used_by": 237,
+    "mitigations": [
+     {
+      "id": "M1026",
+      "name": "Privileged Account Management",
+      "description": "Privileged Account Management focuses on implementing policies, controls, and tools to securely manage privileged accounts (e.g., SYSTEM, root, or administrative accounts).",
+      "url": "https://attack.mitre.org/mitigations/M1026/"
+     },
+     {
+      "id": "M1038",
+      "name": "Execution Prevention",
+      "description": "Prevent the execution of unauthorized or malicious code on systems by implementing application control, script blocking, and other execution prevention mechanisms. This ensures that only trusted and authorized code is executed, reducing the risk of malware and unauthorized actions.",
+      "url": "https://attack.mitre.org/mitigations/M1038/"
+     },
+     {
+      "id": "M1042",
+      "name": "Disable or Remove Feature or Program",
+      "description": "Disable or remove unnecessary and potentially vulnerable software, features, or services to reduce the attack surface and prevent abuse by adversaries. This involves identifying software or features that are no longer needed or that could be exploited and ensuring they are either removed or properly disabled.",
+      "url": "https://attack.mitre.org/mitigations/M1042/"
+     },
+     {
+      "id": "M1045",
+      "name": "Code Signing",
+      "description": "Code Signing is a security process that ensures the authenticity and integrity of software by digitally signing executables, scripts, and other code artifacts. It prevents untrusted or malicious code from executing by verifying the digital signatures against trusted sources.",
+      "url": "https://attack.mitre.org/mitigations/M1045/"
+     },
+     {
+      "id": "M1049",
+      "name": "Antivirus/Antimalware",
+      "description": "Antivirus/Antimalware solutions utilize signatures, heuristics, and behavioral analysis to detect, block, and remediate malicious software, including viruses, trojans, ransomware, and spyware. These solutions continuously monitor endpoints and systems for known malicious patterns and suspicious behaviors that indicate compromise.",
+      "url": "https://attack.mitre.org/mitigations/M1049/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0455",
+      "name": "Abuse of PowerShell for Arbitrary Execution",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Detects behavioral chains where PowerShell is launched with encoded commands, unusual parent processes, or suspicious modules loaded, potentially followed by network connections or child process spawning. Supports detection of both direct (powershell.exe) and indirect (.NET automation) invocations.",
+        "log_sources": [
+         "WinEventLog:PowerShell",
+         "WinEventLog:Sysmon"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0455/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-DA",
+       "name": "Dynamic Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:DynamicAnalysis/"
+      },
+      {
+       "id": "D3-EFA",
+       "name": "Emulated File Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:EmulatedFileAnalysis/"
+      },
+      {
+       "id": "D3-FA",
+       "name": "File Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileAnalysis/"
+      },
+      {
+       "id": "D3-FIM",
+       "name": "File Integrity Monitoring",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileIntegrityMonitoring/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-CF",
+       "name": "Content Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentFiltering/"
+      },
+      {
+       "id": "D3-CM",
+       "name": "Content Modification",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentModification/"
+      },
+      {
+       "id": "D3-CQ",
+       "name": "Content Quarantine",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentQuarantine/"
+      },
+      {
+       "id": "D3-EAL",
+       "name": "Executable Allowlisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableAllowlisting/"
+      },
+      {
+       "id": "D3-EDL",
+       "name": "Executable Denylisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableDenylisting/"
+      },
+      {
+       "id": "D3-LFP",
+       "name": "Local File Permissions",
+       "url": "https://d3fend.mitre.org/technique/d3f:LocalFilePermissions/"
+      },
+      {
+       "id": "D3-RFAM",
+       "name": "Remote File Access Mediation",
+       "url": "https://d3fend.mitre.org/technique/d3f:RemoteFileAccessMediation/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-FEV",
+       "name": "File Eviction",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileEviction/"
+      }
+     ],
+     "Restore": [
+      {
+       "id": "D3-RF",
+       "name": "Restore File",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreFile/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-FE",
+       "name": "File Encryption",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileEncryption/"
+      }
+     ],
+     "Deceive": [
+      {
+       "id": "D3-DF",
+       "name": "Decoy File",
+       "url": "https://d3fend.mitre.org/technique/d3f:DecoyFile/"
+      }
+     ]
+    }
+   }
+  ],
+  "allowed_refs": [
+   "D3-ABPI",
+   "D3-CF",
+   "D3-CM",
+   "D3-CQ",
+   "D3-DA",
+   "D3-DF",
+   "D3-EAL",
+   "D3-EDL",
+   "D3-EFA",
+   "D3-FA",
+   "D3-FE",
+   "D3-FEV",
+   "D3-FIM",
+   "D3-HBPI",
+   "D3-HR",
+   "D3-HS",
+   "D3-KBPI",
+   "D3-LFP",
+   "D3-PLA",
+   "D3-PS",
+   "D3-PSA",
+   "D3-PSMD",
+   "D3-PT",
+   "D3-RF",
+   "D3-RFAM",
+   "D3-SCA",
+   "D3-SCF",
+   "D3-SDM",
+   "D3-SJA",
+   "DET0441",
+   "DET0455",
+   "M1018",
+   "M1026",
+   "M1028",
+   "M1038",
+   "M1042",
+   "M1045",
+   "M1047",
+   "M1049",
+   "T1053",
+   "T1053.005",
+   "T1059",
+   "T1059.001"
+  ]
+ },
+ "playbook": {
+  "title": "Response Playbook for Malicious Scheduled Task Creation on HR-LAPTOP-22",
+  "executive_summary": "A scheduled task \"OneDriveUpdateCore\" was created by user CORP\\a.khan on HR-LAPTOP-22 using PowerShell to run an encoded payload as SYSTEM at every logon, indicating high\u2011severity persistence. Immediate containment, evidence collection, eradication of the task, and system hardening are required.",
+  "detection_and_analysis": [
+   {
+    "action": "Collect volatile memory and process list from HR-LAPTOP-22",
+    "detail": "Use a trusted forensic tool (e.g., FTK Imager) to capture RAM and enumerate running processes, focusing on any powershell.exe or taskeng.exe instances.",
+    "references": []
+   },
+   {
+    "action": "Query Windows Event Logs for related events",
+    "detail": "Search WinEventLog:Security for EventID 4698 and Sysmon EventID 1 for the task creation time; also review WinEventLog:PowerShell for encoded command execution.",
+    "references": [
+     "DET0441",
+     "DET0455"
+    ]
+   },
+   {
+    "action": "Identify the full encoded PowerShell command",
+    "detail": "Extract the Base64 string from the scheduled task definition and decode it in a sandbox to determine payload behavior.",
+    "references": []
+   }
+  ],
+  "containment": [
+   {
+    "action": "Disable the scheduled task \"OneDriveUpdateCore\" on the host",
+    "detail": "Run schtasks /Change /TN \"OneDriveUpdateCore\" /Disable and verify status with schtasks /Query /TN \"OneDriveUpdateCore\".",
+    "references": [
+     "T1053.005"
+    ]
+   },
+   {
+    "action": "Isolate HR-LAPTOP-22 from the corporate network",
+    "detail": "Move the endpoint to a quarantine VLAN or disable its network adapter to prevent further execution of the payload.",
+    "references": [
+     "D3-ABPI"
+    ]
+   },
+   {
+    "action": "Terminate any malicious PowerShell processes",
+    "detail": "Use taskkill /PID <pid> for powershell.exe instances launched with -enc flag; confirm parentage via Process Lineage Analysis.",
+    "references": [
+     "D3-PLA"
+    ]
+   }
+  ],
+  "eradication": [
+   {
+    "action": "Delete the malicious scheduled task",
+    "detail": "Run schtasks /Delete /TN \"OneDriveUpdateCore\" /F after confirming no legitimate task shares the name.",
+    "references": [
+     "T1053.005"
+    ]
+   },
+   {
+    "action": "Remove the encoded PowerShell script from the system",
+    "detail": "Search for the decoded script file or temporary files in %TEMP% and delete them; ensure no remnants remain.",
+    "references": []
+   },
+   {
+    "action": "Reset the user account permissions for CORP\\a.khan",
+    "detail": "Review group membership and remove unnecessary privileged rights; enforce least\u2011privilege.",
+    "references": [
+     "M1018",
+     "M1026"
+    ]
+   }
+  ],
+  "recovery": [
+   {
+    "action": "Restore system integrity from a known good backup",
+    "detail": "Reimage HR-LAPTOP-22 or apply a clean system state snapshot after confirming eradication steps succeeded.",
+    "references": []
+   },
+   {
+    "action": "Re\u2011enable network connectivity and monitor for re\u2011creation of the task",
+    "detail": "Place the host back on the network with enhanced logging; alert on any new scheduled task creation events.",
+    "references": [
+     "DET0441"
+    ]
+   }
+  ],
+  "hardening": [
+   {
+    "action": "Enable Application Allowlisting for scheduled tasks",
+    "detail": "Configure Windows Defender Application Control to only allow signed binaries for task actions, blocking arbitrary PowerShell execution.",
+    "references": [
+     "M1038",
+     "D3-EAL"
+    ]
+   },
+   {
+    "action": "Audit and enforce privileged account usage",
+    "detail": "Implement M1026 controls and enable detailed logging for SYSTEM account task creation; review audit logs daily.",
+    "references": [
+     "M1026",
+     "M1047"
+    ]
+   },
+   {
+    "action": "Deploy detection rule DET0441 across all endpoints",
+    "detail": "Ensure the scheduled task creation detection rule is active and tuned to flag hidden or anomalous tasks.",
+    "references": [
+     "DET0441"
+    ]
+   }
+  ],
+  "hunt_leads": [
+   {
+    "log_source": "WinEventLog:Security",
+    "look_for": "EventID 4698 for tasks created by non\u2011admin users or with SYSTEM run level"
+   },
+   {
+    "log_source": "WinEventLog:PowerShell",
+    "look_for": "EncodedCommand (-enc) usage and parent process PowerShell launched from schtasks"
+   },
+   {
+    "log_source": "WinEventLog:Sysmon",
+    "look_for": "ProcessCreate events where parent is powershell.exe and child is schtasks.exe with /create flag"
+   }
+  ]
+ },
+ "review": {
+  "verdict": "approve",
+  "issues": [],
+  "auto_issues": []
+ },
+ "status": "awaiting_analyst",
+ "saved_at": "2026-10-22"
+}

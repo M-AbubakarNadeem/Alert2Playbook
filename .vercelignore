@@ -1,0 +1,9 @@
+.venv
+.venv-bench
+.env
+data/raw
+docs
+eval
+tests
+benchmarks
+scripts

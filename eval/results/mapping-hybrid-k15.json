@@ -1,0 +1,387 @@
+{
+ "summary": {
+  "retrieval": "hybrid (Pinecone dense + BM25, RRF)",
+  "models": {
+   "triage": "qwen/qwen3.8-27b",
+   "mapper": "openai/gpt-oss-20b"
+  },
+  "alerts": 30,
+  "errors": 2,
+  "candidate_recall@15": 67.9,
+  "exact@1": 10.7,
+  "exact@3": 39.3,
+  "family@3": 50.0,
+  "median_seconds": 19.48,
+  "mean_tokens": 2925,
+  "date": "2026-10-21",
+  "candidates": 15,
+  "note": "Rebuilt from the run's console log; art-000 was cut from the captured output."
+ },
+ "alerts": [
+  {
+   "id": "art-001",
+   "gold": "T1090.001",
+   "mapped": [
+    "T1059.001",
+    "T1090.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 21.43
+  },
+  {
+   "id": "art-002",
+   "gold": "T1552.005",
+   "mapped": [
+    "T1552.005"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 29.07
+  },
+  {
+   "id": "art-003",
+   "gold": "T1553.006",
+   "mapped": [
+    "T1059.003",
+    "T1542.003"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 22.58
+  },
+  {
+   "id": "art-004",
+   "gold": "T1016.002",
+   "mapped": [
+    "T1016.002",
+    "T1552.001"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 25.48
+  },
+  {
+   "id": "art-005",
+   "gold": "T1059",
+   "mapped": [
+    "T1059.001",
+    "T1059.010"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 18.02
+  },
+  {
+   "id": "art-006",
+   "gold": "T1567.003",
+   "mapped": [
+    "T1059.001",
+    "T1567.003"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 15.25
+  },
+  {
+   "id": "art-007",
+   "gold": "T1491.001",
+   "mapped": [
+    "T1059.003",
+    "T1021.004",
+    "T1675"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 26.46
+  },
+  {
+   "id": "art-008",
+   "gold": "T1195.002",
+   "mapped": [
+    "T1059.013",
+    "T1610"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 15.43
+  },
+  {
+   "id": "art-009",
+   "gold": "T1091",
+   "mapped": [
+    "T1059.001",
+    "T1680",
+    "T1091"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 19.5
+  },
+  {
+   "id": "art-010",
+   "gold": "T1505.005",
+   "mapped": [
+    "T1222.001",
+    "T1546.010",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 30.72
+  },
+  {
+   "id": "art-011",
+   "error": "Groq 429: output tokens per minute limit (before max_retries was raised to 5)"
+  },
+  {
+   "id": "art-012",
+   "gold": "T1595.003",
+   "mapped": [
+    "T1059.001",
+    "T1595.003"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 3.61
+  },
+  {
+   "id": "art-013",
+   "gold": "T1218.002",
+   "mapped": [
+    "T1218.002",
+    "T1036.005"
+   ],
+   "recall": true,
+   "exact1": true,
+   "exact3": true,
+   "family3": true,
+   "seconds": 2.41
+  },
+  {
+   "id": "art-014",
+   "error": "Groq 429: output tokens per minute limit (before max_retries was raised to 5)"
+  },
+  {
+   "id": "art-015",
+   "gold": "T1132.001",
+   "mapped": [
+    "T1132.002",
+    "T1048.003",
+    "T1059.004"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 4.02
+  },
+  {
+   "id": "art-016",
+   "gold": "T1003.006",
+   "mapped": [
+    "T1087.002",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 20.69
+  },
+  {
+   "id": "art-017",
+   "gold": "T1689",
+   "mapped": [
+    "T1059.001",
+    "T1675"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 41.95
+  },
+  {
+   "id": "art-018",
+   "gold": "T1049",
+   "mapped": [
+    "T1059.004",
+    "T1049"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 19.67
+  },
+  {
+   "id": "art-019",
+   "gold": "T1569.001",
+   "mapped": [
+    "T1543.004",
+    "T1569.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 16.75
+  },
+  {
+   "id": "art-020",
+   "gold": "T1030",
+   "mapped": [
+    "T1059.001",
+    "T1567.004",
+    "T1005"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 18.63
+  },
+  {
+   "id": "art-021",
+   "gold": "T1496",
+   "mapped": [
+    "T1059.001",
+    "T1496"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 18.33
+  },
+  {
+   "id": "art-022",
+   "gold": "T1566.001",
+   "mapped": [
+    "T1059.001",
+    "T1105",
+    "T1059.007"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 27.27
+  },
+  {
+   "id": "art-023",
+   "gold": "T1021.005",
+   "mapped": [
+    "T1219.002"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 34.54
+  },
+  {
+   "id": "art-024",
+   "gold": "T1505.002",
+   "mapped": [
+    "T1059.001",
+    "T1505.002"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": true,
+   "family3": true,
+   "seconds": 18.42
+  },
+  {
+   "id": "art-025",
+   "gold": "T1098",
+   "mapped": [
+    "T1136.002",
+    "T1098.007",
+    "T1059.001"
+   ],
+   "recall": true,
+   "exact1": false,
+   "exact3": false,
+   "family3": true,
+   "seconds": 26.8
+  },
+  {
+   "id": "art-026",
+   "gold": "T1592.001",
+   "mapped": [
+    "T1120",
+    "T1059.001"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 42.05
+  },
+  {
+   "id": "art-027",
+   "gold": "T1055.003",
+   "mapped": [
+    "T1059.001",
+    "T1036"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 19.46
+  },
+  {
+   "id": "art-028",
+   "gold": "T1114.001",
+   "mapped": [
+    "T1059.001",
+    "T1213",
+    "T1074.001"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 2.3
+  },
+  {
+   "id": "art-029",
+   "gold": "T1071",
+   "mapped": [
+    "T1059.001",
+    "T1202"
+   ],
+   "recall": false,
+   "exact1": false,
+   "exact3": false,
+   "family3": false,
+   "seconds": 19.4
+  }
+ ]
+}

@@ -1,0 +1,1149 @@
+{
+ "alert": "AWS CloudTrail sequence for IAM user dev-ops-ci (account 4xxxxxxxxxx2), region eu-west-1\n1. 03:12:40Z ConsoleLogin  sourceIPAddress=185.234.219.31 (first time seen, country RO)  additionalEventData.MFAUsed=No  responseElements.ConsoleLogin=Success\n2. 03:14:02Z CreateAccessKey  userName=dev-ops-ci\n3. 03:15:47Z PutBucketPolicy  bucketName=prod-customer-exports  policy grants s3:GetObject to Principal \"*\"\n4. 03:16:10Z-03:22:55Z  1,842 GetObject calls on prod-customer-exports from 185.234.219.31",
+ "revisions": 0,
+ "steps": [
+  {
+   "node": "screen",
+   "ms": 198,
+   "score": 0.0008844845579005778,
+   "flagged": false
+  },
+  {
+   "node": "triage",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 13336,
+   "input_tokens": 1233,
+   "output_tokens": 349
+  },
+  {
+   "node": "retrieve",
+   "ms": 1525,
+   "mode": "hybrid (Pinecone dense + BM25, RRF)",
+   "queries": 11
+  },
+  {
+   "node": "map_attack",
+   "model": "openai/gpt-oss-20b",
+   "ms": 1018,
+   "input_tokens": 1735,
+   "output_tokens": 246,
+   "rejected_ids": []
+  },
+  {
+   "node": "enrich",
+   "ms": 0,
+   "graph_nodes": 48
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 4171,
+   "input_tokens": 2930,
+   "output_tokens": 1133
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 13527,
+   "input_tokens": 2130,
+   "output_tokens": 39,
+   "verdict": "approve"
+  }
+ ],
+ "guard": {
+  "score": 0.0008844845579005778,
+  "flagged": false
+ },
+ "triage": {
+  "summary": "IAM user dev-ops-ci logged into the AWS console from a new Romanian IP without MFA, then created an access key, made the prod-customer-exports S3 bucket publicly readable, and downloaded 1,842 objects from it.",
+  "platform": "cloud",
+  "severity": "critical",
+  "severity_reason": "A new, non-MFA login from a foreign IP was immediately followed by public exposure and bulk exfiltration of a production customer data bucket, indicating a likely successful data breach.",
+  "behaviors": [
+   "logging into the AWS console from a new, non-MFA source IP",
+   "creating a new IAM access key for the authenticated user",
+   "modifying an S3 bucket policy to grant public read access",
+   "bulk-downloading objects from a production customer data bucket"
+  ],
+  "technique_hints": [
+   "Valid Accounts: Cloud Accounts",
+   "Account Manipulation: Cloud Account",
+   "Cloud Infrastructure Modification: Cloud Storage Bucket Modification",
+   "Data from Information Repositories: Network Shared Drive",
+   "Exfiltration Over Web Service: Exfiltration to Cloud Storage"
+  ],
+  "observables": {
+   "hosts": [
+    "185.234.219.31"
+   ],
+   "users": [
+    "dev-ops-ci"
+   ],
+   "processes": [],
+   "files": [
+    "prod-customer-exports"
+   ],
+   "network": [
+    "185.234.219.31"
+   ],
+   "registry": []
+  }
+ },
+ "candidates": [
+  {
+   "id": "T1078.004",
+   "name": "Valid Accounts: Cloud Accounts",
+   "tactics": [
+    "stealth",
+    "persistence",
+    "privilege-escalation",
+    "initial-access"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1567.002",
+   "name": "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+   "tactics": [
+    "exfiltration"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1586.003",
+   "name": "Compromise Accounts: Cloud Accounts",
+   "tactics": [
+    "resource-development"
+   ],
+   "score": 0.2015,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1087.004",
+   "name": "Account Discovery: Cloud Account",
+   "tactics": [
+    "discovery"
+   ],
+   "score": 0.1645,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1585.003",
+   "name": "Establish Accounts: Cloud Accounts",
+   "tactics": [
+    "resource-development"
+   ],
+   "score": 0.164,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1485.001",
+   "name": "Data Destruction: Lifecycle-Triggered Deletion",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.1609,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1098.003",
+   "name": "Account Manipulation: Additional Cloud Roles",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1582,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1580",
+   "name": "Cloud Infrastructure Discovery",
+   "tactics": [
+    "discovery"
+   ],
+   "score": 0.149,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1021.008",
+   "name": "Remote Services: Direct Cloud VM Connections",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.1395,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1537",
+   "name": "Transfer Data to Cloud Account",
+   "tactics": [
+    "exfiltration"
+   ],
+   "score": 0.1391,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1098.001",
+   "name": "Account Manipulation: Additional Cloud Credentials",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1324,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1136.003",
+   "name": "Create Account: Cloud Account",
+   "tactics": [
+    "persistence"
+   ],
+   "score": 0.1268,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1556.009",
+   "name": "Modify Authentication Process: Conditional Access Policies",
+   "tactics": [
+    "defense-impairment",
+    "persistence",
+    "credential-access"
+   ],
+   "score": 0.1261,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1619",
+   "name": "Cloud Storage Object Discovery",
+   "tactics": [
+    "discovery"
+   ],
+   "score": 0.112,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1685.002",
+   "name": "Disable or Modify Tools: Disable or Modify Cloud Log",
+   "tactics": [
+    "defense-impairment"
+   ],
+   "score": 0.0982,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1136",
+   "name": "Create Account",
+   "tactics": [
+    "persistence"
+   ],
+   "score": 0.0945,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1535",
+   "name": "Unused/Unsupported Cloud Regions",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.0938,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1098.005",
+   "name": "Account Manipulation: Device Registration",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0895,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1098",
+   "name": "Account Manipulation",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0872,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1578.002",
+   "name": "Modify Cloud Compute Infrastructure: Create Cloud Instance",
+   "tactics": [
+    "defense-impairment"
+   ],
+   "score": 0.0849,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1530",
+   "name": "Data from Cloud Storage",
+   "tactics": [
+    "collection"
+   ],
+   "score": 0.0833,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1098.006",
+   "name": "Account Manipulation: Additional Container Cluster Roles",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0814,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1021.007",
+   "name": "Remote Services: Cloud Services",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.0802,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1548.005",
+   "name": "Abuse Elevation Control Mechanism: Temporary Elevated Cloud Access",
+   "tactics": [
+    "privilege-escalation"
+   ],
+   "score": 0.0775,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1484.001",
+   "name": "Domain or Tenant Policy Modification: Group Policy Modification",
+   "tactics": [
+    "defense-impairment",
+    "privilege-escalation"
+   ],
+   "score": 0.0714,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  }
+ ],
+ "mapping": [
+  {
+   "technique_id": "T1078.004",
+   "confidence": "high",
+   "evidence": "ConsoleLogin  sourceIPAddress=185.234.219.31 (first time seen, country RO)  additionalEventData.MFAUsed=No  responseElements.ConsoleLogin=Success",
+   "name": "Valid Accounts: Cloud Accounts"
+  },
+  {
+   "technique_id": "T1098.001",
+   "confidence": "high",
+   "evidence": "CreateAccessKey  userName=dev-ops-ci",
+   "name": "Account Manipulation: Additional Cloud Credentials"
+  },
+  {
+   "technique_id": "T1567.002",
+   "confidence": "high",
+   "evidence": "GetObject calls on prod-customer-exports from 185.234.219.31",
+   "name": "Exfiltration Over Web Service: Exfiltration to Cloud Storage"
+  }
+ ],
+ "context": {
+  "techniques": [
+   {
+    "id": "T1078.004",
+    "name": "Valid Accounts: Cloud Accounts",
+    "url": "https://attack.mitre.org/techniques/T1078/004/",
+    "domain": "enterprise",
+    "tactics": [
+     "stealth",
+     "persistence",
+     "privilege-escalation",
+     "initial-access"
+    ],
+    "platforms": [
+     "IaaS",
+     "Identity Provider",
+     "Office Suite",
+     "SaaS"
+    ],
+    "description": "Valid accounts in cloud environments may allow adversaries to perform actions to achieve Initial Access, Persistence, Privilege Escalation, or Defense Evasion. Cloud accounts are those created and configured by an organization for use by users, remote support, services, or for administration of resources within a cloud service provider or SaaS application. Cloud Accounts can exist solely in the cloud; alternatively, they may be hybrid-joined between on-premises systems and the cloud through syncing or federation with other identity sources such as Windows Active Directory. Service or user accounts may be targeted by adversaries through Brute Force, Phishing, or various other means to gain access to the environment.",
+    "parent": "T1078",
+    "used_by": 23,
+    "mitigations": [
+     {
+      "id": "M1015",
+      "name": "Active Directory Configuration",
+      "description": "Implement robust Active Directory (AD) configurations using group policies to secure user accounts, control access, and minimize the attack surface. AD configurations enable centralized control over account settings, logon policies, and permissions, reducing the risk of unauthorized access and lateral movement within the network.",
+      "url": "https://attack.mitre.org/mitigations/M1015/"
+     },
+     {
+      "id": "M1017",
+      "name": "User Training",
+      "description": "User Training involves educating employees and contractors on recognizing, reporting, and preventing cyber threats that rely on human interaction, such as phishing, social engineering, and other manipulative techniques. Comprehensive training programs create a human firewall by empowering users to be an active component of the organization's cybersecurity defenses.",
+      "url": "https://attack.mitre.org/mitigations/M1017/"
+     },
+     {
+      "id": "M1018",
+      "name": "User Account Management",
+      "description": "User Account Management involves implementing and enforcing policies for the lifecycle of user accounts, including creation, modification, and deactivation. Proper account management reduces the attack surface by limiting unauthorized access, managing account privileges, and ensuring accounts are used according to organizational policies.",
+      "url": "https://attack.mitre.org/mitigations/M1018/"
+     },
+     {
+      "id": "M1026",
+      "name": "Privileged Account Management",
+      "description": "Privileged Account Management focuses on implementing policies, controls, and tools to securely manage privileged accounts (e.g., SYSTEM, root, or administrative accounts).",
+      "url": "https://attack.mitre.org/mitigations/M1026/"
+     },
+     {
+      "id": "M1027",
+      "name": "Password Policies",
+      "description": "Set and enforce secure password policies for accounts to reduce the likelihood of unauthorized access. Strong password policies include enforcing password complexity, requiring regular password changes, and preventing password reuse.",
+      "url": "https://attack.mitre.org/mitigations/M1027/"
+     },
+     {
+      "id": "M1032",
+      "name": "Multi-factor Authentication",
+      "description": "Multi-Factor Authentication (MFA) enhances security by requiring users to provide at least two forms of verification to prove their identity before granting access. These factors typically include: - *Something you know*: Passwords, PINs. - *Something you have*: Physical tokens, smartphone authenticator apps.",
+      "url": "https://attack.mitre.org/mitigations/M1032/"
+     },
+     {
+      "id": "M1036",
+      "name": "Account Use Policies",
+      "description": "Account Use Policies help mitigate unauthorized access by configuring and enforcing rules that govern how and when accounts can be used. These policies include enforcing account lockout mechanisms, restricting login times, and setting inactivity timeouts.",
+      "url": "https://attack.mitre.org/mitigations/M1036/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0546",
+      "name": "Detection of Abused or Compromised Cloud Accounts for Access and Persistence",
+      "analytics": [
+       {
+        "platforms": [
+         "Identity Provider"
+        ],
+        "description": "Detects anomalous authentication activity such as sign-ins from impossible geolocations or legacy protocols from high-privileged accounts.",
+        "log_sources": [
+         "azure:signinlogs",
+         "saas:okta"
+        ]
+       },
+       {
+        "platforms": [
+         "IaaS"
+        ],
+        "description": "Detects cloud account use for API calls that exceed normal scope, such as IAM changes or access to services never used before.",
+        "log_sources": [
+         "AWS:CloudTrail",
+         "gcp:audit"
+        ]
+       },
+       {
+        "platforms": [
+         "SaaS"
+        ],
+        "description": "Detects unexpected access or usage of cloud productivity tools (e.g., downloading large numbers of files, creating external shares) by internal users.",
+        "log_sources": [
+         "gcp:audit",
+         "m365:unified"
+        ]
+       },
+       {
+        "platforms": [
+         "Office Suite"
+        ],
+        "description": "Detects login and usage patterns deviating from typical Microsoft 365 or Google Workspace user profiles.",
+        "log_sources": [
+         "gcp:audit",
+         "m365:signinlogs"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0546/"
+     }
+    ],
+    "d3fend": {
+     "Isolate": [
+      {
+       "id": "D3-UAP",
+       "name": "User Account Permissions",
+       "url": "https://d3fend.mitre.org/technique/d3f:UserAccountPermissions/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-AL",
+       "name": "Account Locking",
+       "url": "https://d3fend.mitre.org/technique/d3f:AccountLocking/"
+      }
+     ],
+     "Restore": [
+      {
+       "id": "D3-RUAA",
+       "name": "Restore User Account Access",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreUserAccountAccess/"
+      },
+      {
+       "id": "D3-ULA",
+       "name": "Unlock Account",
+       "url": "https://d3fend.mitre.org/technique/d3f:UnlockAccount/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-AA",
+       "name": "Agent Authentication",
+       "url": "https://d3fend.mitre.org/technique/d3f:AgentAuthentication/"
+      },
+      {
+       "id": "D3-CDP",
+       "name": "Change Default Password",
+       "url": "https://d3fend.mitre.org/technique/d3f:ChangeDefaultPassword/"
+      }
+     ],
+     "Model": [
+      {
+       "id": "D3-AM",
+       "name": "Access Modeling",
+       "url": "https://d3fend.mitre.org/technique/d3f:AccessModeling/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1098.001",
+    "name": "Account Manipulation: Additional Cloud Credentials",
+    "url": "https://attack.mitre.org/techniques/T1098/001/",
+    "domain": "enterprise",
+    "tactics": [
+     "persistence",
+     "privilege-escalation"
+    ],
+    "platforms": [
+     "IaaS",
+     "Identity Provider",
+     "SaaS"
+    ],
+    "description": "Adversaries may add adversary-controlled credentials to a cloud account to maintain persistent access to victim accounts and instances within the environment. For example, adversaries may add credentials for Service Principals and Applications in addition to existing legitimate credentials in Azure / Entra ID. These credentials include both x509 keys and passwords. With sufficient permissions, there are a variety of ways to add credentials including the Azure Portal, Azure command line interface, and Azure or Az PowerShell modules. In infrastructure-as-a-service (IaaS) environments, after gaining access through Cloud Accounts, adversaries may generate or import their own SSH keys using either the CreateKeyPair or ImportKeyPair API in AWS or the gcloud compute os-login ssh-keys add command in GCP.",
+    "parent": "T1098",
+    "used_by": 4,
+    "mitigations": [
+     {
+      "id": "M1018",
+      "name": "User Account Management",
+      "description": "User Account Management involves implementing and enforcing policies for the lifecycle of user accounts, including creation, modification, and deactivation. Proper account management reduces the attack surface by limiting unauthorized access, managing account privileges, and ensuring accounts are used according to organizational policies.",
+      "url": "https://attack.mitre.org/mitigations/M1018/"
+     },
+     {
+      "id": "M1026",
+      "name": "Privileged Account Management",
+      "description": "Privileged Account Management focuses on implementing policies, controls, and tools to securely manage privileged accounts (e.g., SYSTEM, root, or administrative accounts).",
+      "url": "https://attack.mitre.org/mitigations/M1026/"
+     },
+     {
+      "id": "M1030",
+      "name": "Network Segmentation",
+      "description": "Network segmentation involves dividing a network into smaller, isolated segments to control and limit the flow of traffic between devices, systems, and applications. By segmenting networks, organizations can reduce the attack surface, restrict lateral movement by adversaries, and protect critical assets from compromise.",
+      "url": "https://attack.mitre.org/mitigations/M1030/"
+     },
+     {
+      "id": "M1032",
+      "name": "Multi-factor Authentication",
+      "description": "Multi-Factor Authentication (MFA) enhances security by requiring users to provide at least two forms of verification to prove their identity before granting access. These factors typically include: - *Something you know*: Passwords, PINs. - *Something you have*: Physical tokens, smartphone authenticator apps.",
+      "url": "https://attack.mitre.org/mitigations/M1032/"
+     },
+     {
+      "id": "M1042",
+      "name": "Disable or Remove Feature or Program",
+      "description": "Disable or remove unnecessary and potentially vulnerable software, features, or services to reduce the attack surface and prevent abuse by adversaries. This involves identifying software or features that are no longer needed or that could be exploited and ensuring they are either removed or properly disabled.",
+      "url": "https://attack.mitre.org/mitigations/M1042/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0531",
+      "name": "Detection Strategy for Additional Cloud Credentials in IaaS/IdP/SaaS",
+      "analytics": [
+       {
+        "platforms": [
+         "Identity Provider"
+        ],
+        "description": "Addition of credentials (keys, app passwords, x.509 certs) to existing cloud accounts, service principals, or OAuth apps via portal or API by non-standard identities or IP ranges.",
+        "log_sources": [
+         "azure:audit"
+        ]
+       },
+       {
+        "platforms": [
+         "IaaS"
+        ],
+        "description": "Cloud API usage to create/import SSH keys or generate new access keys (CreateAccessKey, ImportKeyPair, CreateLoginProfile) from non-console access or unusual principals.",
+        "log_sources": [
+         "AWS:CloudTrail",
+         "gcp:audit"
+        ]
+       },
+       {
+        "platforms": [
+         "SaaS"
+        ],
+        "description": "Credential-related configuration changes in productivity apps, such as API key creation in Google Workspace, app tokens in Slack, or user-level OAuth credentials in M365.",
+        "log_sources": [
+         "gcp:audit",
+         "m365:unified"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0531/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-ANAA",
+       "name": "Administrative Network Activity Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:AdministrativeNetworkActivityAnalysis/"
+      },
+      {
+       "id": "D3-APCA",
+       "name": "Application Protocol Command Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ApplicationProtocolCommandAnalysis/"
+      },
+      {
+       "id": "D3-CAA",
+       "name": "Connection Attempt Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ConnectionAttemptAnalysis/"
+      },
+      {
+       "id": "D3-CCSA",
+       "name": "Credential Compromise Scope Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:CredentialCompromiseScopeAnalysis/"
+      },
+      {
+       "id": "D3-CSPP",
+       "name": "Client-server Payload Profiling",
+       "url": "https://d3fend.mitre.org/technique/d3f:Client-serverPayloadProfiling/"
+      },
+      {
+       "id": "D3-NTCD",
+       "name": "Network Traffic Community Deviation",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficCommunityDeviation/"
+      },
+      {
+       "id": "D3-NTSA",
+       "name": "Network Traffic Signature Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficSignatureAnalysis/"
+      },
+      {
+       "id": "D3-PHDURA",
+       "name": "Per Host Download-Upload Ratio Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:PerHostDownload-UploadRatioAnalysis/"
+      },
+      {
+       "id": "D3-PMAD",
+       "name": "Protocol Metadata Anomaly Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProtocolMetadataAnomalyDetection/"
+      },
+      {
+       "id": "D3-RTSD",
+       "name": "Remote Terminal Session Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:RemoteTerminalSessionDetection/"
+      },
+      {
+       "id": "D3-UGLPA",
+       "name": "User Geolocation Logon Pattern Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:UserGeolocationLogonPatternAnalysis/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-CTS",
+       "name": "Credential Transmission Scoping",
+       "url": "https://d3fend.mitre.org/technique/d3f:CredentialTransmissionScoping/"
+      },
+      {
+       "id": "D3-NTF",
+       "name": "Network Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficFiltering/"
+      },
+      {
+       "id": "D3-UAP",
+       "name": "User Account Permissions",
+       "url": "https://d3fend.mitre.org/technique/d3f:UserAccountPermissions/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-AL",
+       "name": "Account Locking",
+       "url": "https://d3fend.mitre.org/technique/d3f:AccountLocking/"
+      },
+      {
+       "id": "D3-ANCI",
+       "name": "Authentication Cache Invalidation",
+       "url": "https://d3fend.mitre.org/technique/d3f:AuthenticationCacheInvalidation/"
+      },
+      {
+       "id": "D3-CR",
+       "name": "Credential Revocation",
+       "url": "https://d3fend.mitre.org/technique/d3f:CredentialRevocation/"
+      }
+     ],
+     "Restore": [
+      {
+       "id": "D3-RIC",
+       "name": "Reissue Credential",
+       "url": "https://d3fend.mitre.org/technique/d3f:ReissueCredential/"
+      },
+      {
+       "id": "D3-RUAA",
+       "name": "Restore User Account Access",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreUserAccountAccess/"
+      },
+      {
+       "id": "D3-ULA",
+       "name": "Unlock Account",
+       "url": "https://d3fend.mitre.org/technique/d3f:UnlockAccount/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-AA",
+       "name": "Agent Authentication",
+       "url": "https://d3fend.mitre.org/technique/d3f:AgentAuthentication/"
+      },
+      {
+       "id": "D3-CDP",
+       "name": "Change Default Password",
+       "url": "https://d3fend.mitre.org/technique/d3f:ChangeDefaultPassword/"
+      },
+      {
+       "id": "D3-CH",
+       "name": "Credential Hardening",
+       "url": "https://d3fend.mitre.org/technique/d3f:CredentialHardening/"
+      },
+      {
+       "id": "D3-CRO",
+       "name": "Credential Rotation",
+       "url": "https://d3fend.mitre.org/technique/d3f:CredentialRotation/"
+      },
+      {
+       "id": "D3-MFA",
+       "name": "Multi-factor Authentication",
+       "url": "https://d3fend.mitre.org/technique/d3f:Multi-factorAuthentication/"
+      }
+     ],
+     "Deceive": [
+      {
+       "id": "D3-DUC",
+       "name": "Decoy User Credential",
+       "url": "https://d3fend.mitre.org/technique/d3f:DecoyUserCredential/"
+      }
+     ],
+     "Model": [
+      {
+       "id": "D3-AM",
+       "name": "Access Modeling",
+       "url": "https://d3fend.mitre.org/technique/d3f:AccessModeling/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1567.002",
+    "name": "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+    "url": "https://attack.mitre.org/techniques/T1567/002/",
+    "domain": "enterprise",
+    "tactics": [
+     "exfiltration"
+    ],
+    "platforms": [
+     "ESXi",
+     "Linux",
+     "macOS",
+     "Windows"
+    ],
+    "description": "Adversaries may exfiltrate data to a cloud storage service rather than over their primary command and control channel. Cloud storage services allow for the storage, edit, and retrieval of data from a remote cloud storage server over the Internet. Examples of cloud storage services include Dropbox and Google Docs. Exfiltration to these cloud storage services can provide a significant amount of cover to the adversary if hosts within the network are already communicating with the service.",
+    "parent": "T1567",
+    "used_by": 44,
+    "mitigations": [
+     {
+      "id": "M1021",
+      "name": "Restrict Web-Based Content",
+      "description": "Restricting web-based content involves enforcing policies and technologies that limit access to potentially malicious websites, unsafe downloads, and unauthorized browser behaviors. This can include URL filtering, download restrictions, script blocking, and extension control to protect against exploitation, phishing, and malware delivery.",
+      "url": "https://attack.mitre.org/mitigations/M1021/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0570",
+      "name": "Detection Strategy for Exfiltration to Cloud Storage",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Unusual processes (e.g., powershell.exe, excel.exe) accessing large local files and subsequently initiating HTTPS POST requests to domains associated with cloud storage services (e.g., dropbox.com, drive.google.com, box.com).",
+        "log_sources": [
+         "WinEventLog:Security",
+         "WinEventLog:Sysmon"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Processes such as curl, wget, rclone, or custom scripts executing uploads to cloud storage endpoints. Defender perspective: detect chained events where tar/gzip is executed to compress files followed by HTTPS PUT/POST requests to known storage services.",
+        "log_sources": [
+         "NSM:Flow",
+         "auditd:EXECVE",
+         "auditd:SYSCALL"
+        ]
+       },
+       {
+        "platforms": [
+         "macOS"
+        ],
+        "description": "Applications or scripts invoking cloud storage APIs (Dropbox sync, iCloud, Google Drive client) in unexpected contexts. Defender perspective: detect sensitive file reads by non-standard applications followed by unusual encrypted uploads to external cloud storage domains.",
+        "log_sources": [
+         "macos:unifiedlog"
+        ]
+       },
+       {
+        "platforms": [
+         "ESXi"
+        ],
+        "description": "Unusual ESXi processes (vmx, hostd) reading datastore files and generating outbound HTTPS traffic toward external cloud storage endpoints. Defender perspective: anomalous datastore activity followed by network transfers to Dropbox, AWS S3, or other storage services.",
+        "log_sources": [
+         "esxi:hostd",
+         "esxi:vmkernel"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0570/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-APCA",
+       "name": "Application Protocol Command Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ApplicationProtocolCommandAnalysis/"
+      },
+      {
+       "id": "D3-CSPP",
+       "name": "Client-server Payload Profiling",
+       "url": "https://d3fend.mitre.org/technique/d3f:Client-serverPayloadProfiling/"
+      },
+      {
+       "id": "D3-NTCD",
+       "name": "Network Traffic Community Deviation",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficCommunityDeviation/"
+      },
+      {
+       "id": "D3-NTSA",
+       "name": "Network Traffic Signature Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficSignatureAnalysis/"
+      },
+      {
+       "id": "D3-PHDURA",
+       "name": "Per Host Download-Upload Ratio Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:PerHostDownload-UploadRatioAnalysis/"
+      },
+      {
+       "id": "D3-PMAD",
+       "name": "Protocol Metadata Anomaly Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProtocolMetadataAnomalyDetection/"
+      },
+      {
+       "id": "D3-RPA",
+       "name": "Relay Pattern Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:RelayPatternAnalysis/"
+      },
+      {
+       "id": "D3-RTSD",
+       "name": "Remote Terminal Session Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:RemoteTerminalSessionDetection/"
+      },
+      {
+       "id": "D3-UGLPA",
+       "name": "User Geolocation Logon Pattern Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:UserGeolocationLogonPatternAnalysis/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-NTF",
+       "name": "Network Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficFiltering/"
+      },
+      {
+       "id": "D3-OTF",
+       "name": "Outbound Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:OutboundTrafficFiltering/"
+      }
+     ]
+    }
+   }
+  ],
+  "allowed_refs": [
+   "D3-AA",
+   "D3-AL",
+   "D3-AM",
+   "D3-ANAA",
+   "D3-ANCI",
+   "D3-APCA",
+   "D3-CAA",
+   "D3-CCSA",
+   "D3-CDP",
+   "D3-CH",
+   "D3-CR",
+   "D3-CRO",
+   "D3-CSPP",
+   "D3-CTS",
+   "D3-DUC",
+   "D3-MFA",
+   "D3-NTCD",
+   "D3-NTF",
+   "D3-NTSA",
+   "D3-OTF",
+   "D3-PHDURA",
+   "D3-PMAD",
+   "D3-RIC",
+   "D3-RPA",
+   "D3-RTSD",
+   "D3-RUAA",
+   "D3-UAP",
+   "D3-UGLPA",
+   "D3-ULA",
+   "DET0531",
+   "DET0546",
+   "DET0570",
+   "M1015",
+   "M1017",
+   "M1018",
+   "M1021",
+   "M1026",
+   "M1027",
+   "M1030",
+   "M1032",
+   "M1036",
+   "M1042",
+   "T1078",
+   "T1078.004",
+   "T1098",
+   "T1098.001",
+   "T1567",
+   "T1567.002"
+  ]
+ },
+ "playbook": {
+  "title": "Response Playbook for Compromised AWS IAM User dev-ops-ci",
+  "executive_summary": "A new IAM user login from Romania without MFA created an access key, made an S3 bucket public, and exfiltrated 1,842 objects. Immediate containment, credential revocation, and bucket remediation are required, followed by forensic collection, eradication of the access key, and hardening of account controls.",
+  "detection_and_analysis": [
+   {
+    "action": "Collect and preserve CloudTrail logs for the affected account and region",
+    "detail": "Export raw CloudTrail logs for account 4xxxxxxxxxx2, eu-west-1 covering 03:00\u201104:00Z and store them in immutable storage for analysis.",
+    "references": [
+     "DET0546"
+    ]
+   },
+   {
+    "action": "Identify all API calls made by user dev-ops-ci and source IP 185.234.219.31",
+    "detail": "Query CloudTrail for events with userIdentity.userName=dev-ops-ci and sourceIPAddress=185.234.219.31 to enumerate actions beyond those observed.",
+    "references": [
+     "DET0546"
+    ]
+   },
+   {
+    "action": "Capture current IAM configuration and S3 bucket policy state",
+    "detail": "Use AWS CLI to download the IAM policy list and the policy document of prod-customer-exports for baseline comparison.",
+    "references": []
+   }
+  ],
+  "containment": [
+   {
+    "action": "Immediately revoke the newly created access key for dev-ops-ci",
+    "detail": "Execute aws iam delete-access-key --user-name dev-ops-ci --access-key-id <key-id> and verify removal.",
+    "references": [
+     "T1098.001",
+     "D3-CR"
+    ]
+   },
+   {
+    "action": "Force MFA enrollment and lock the dev-ops-ci account",
+    "detail": "Set MFA required flag on the user and disable console login until investigation completes.",
+    "references": [
+     "M1032",
+     "D3-AL"
+    ]
+   },
+   {
+    "action": "Restrict public access to prod-customer-exports bucket",
+    "detail": "Apply a bucket policy that denies any principal \"*\" from GetObject and enable BlockPublicAcls.",
+    "references": [
+     "T1078.004",
+     "D3-UAP"
+    ]
+   }
+  ],
+  "eradication": [
+   {
+    "action": "Delete any additional access keys or credentials created by the attacker",
+    "detail": "List all access keys for dev-ops-ci and other privileged users; remove any that were not previously authorized.",
+    "references": [
+     "T1098.001",
+     "D3-CR"
+    ]
+   },
+   {
+    "action": "Remove any IAM policies that grant overly permissive S3 access",
+    "detail": "Audit and delete policies that allow s3:GetObject to \"*\"; replace with least\u2011privilege policies.",
+    "references": [
+     "T1078.004",
+     "D3-UAP"
+    ]
+   }
+  ],
+  "recovery": [
+   {
+    "action": "Restore the original bucket policy from backup",
+    "detail": "Re\u2011apply the pre\u2011incident bucket policy that restricts access to authorized principals only.",
+    "references": [
+     "D3-RUAA"
+    ]
+   },
+   {
+    "action": "Rotate all IAM credentials for privileged users",
+    "detail": "Force password and access\u2011key rotation for admin and service accounts to eliminate lingering secrets.",
+    "references": [
+     "M1032",
+     "D3-CRO"
+    ]
+   },
+   {
+    "action": "Validate normal operation of affected services",
+    "detail": "Run functional tests on applications that use prod-customer-exports to ensure no disruption after policy changes.",
+    "references": []
+   }
+  ],
+  "hardening": [
+   {
+    "action": "Enforce MFA for all IAM users and require MFA for console logins",
+    "detail": "Update account security settings to require MFA and enable conditional access based on known IP ranges.",
+    "references": [
+     "M1032",
+     "D3-MFA"
+    ]
+   },
+   {
+    "action": "Implement anomaly detection for CloudTrail logins from new geolocations",
+    "detail": "Deploy DET0546 rules to alert on impossible travel and logins without MFA.",
+    "references": [
+     "DET0546"
+    ]
+   },
+   {
+    "action": "Apply least\u2011privilege principles to IAM roles and bucket policies",
+    "detail": "Use D3-AM access modeling to review and tighten permissions across the environment.",
+    "references": [
+     "D3-AM"
+    ]
+   }
+  ],
+  "hunt_leads": [
+   {
+    "log_source": "AWS:CloudTrail",
+    "look_for": "Any CreateAccessKey, PutBucketPolicy, or GetObject events from IPs not in the corporate allow\u2011list, especially without MFA."
+   },
+   {
+    "log_source": "AWS:Config",
+    "look_for": "Changes to S3 bucket ACLs or policies that grant public read access."
+   },
+   {
+    "log_source": "AWS:GuardDuty",
+    "look_for": "Findings related to compromised credentials or anomalous data exfiltration patterns."
+   }
+  ]
+ },
+ "review": {
+  "verdict": "approve",
+  "issues": [],
+  "auto_issues": []
+ },
+ "status": "awaiting_analyst",
+ "saved_at": "2026-10-22"
+}
