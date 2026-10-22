@@ -1,0 +1,174 @@
+{
+ "summary": {
+  "date": "2026-10-22",
+  "alerts": 7,
+  "models": {
+   "triage": "qwen/qwen3.8-27b",
+   "mapper": "openai/gpt-oss-20b",
+   "writer": "openai/gpt-oss-120b",
+   "critic": "qwen/qwen3.8-27b"
+  },
+  "crewai_caps": "same as LangGraph (alert2playbook.llm.MAX_TOKENS)",
+  "langgraph": {
+   "runs": 7,
+   "failures": 0,
+   "median_seconds": 7.24,
+   "mean_tokens": 11684,
+   "mean_llm_steps": 4.57,
+   "approved": 6,
+   "mean_references": 15.6
+  },
+  "crewai": {
+   "runs": 1,
+   "failures": 6,
+   "median_seconds": 9.21,
+   "mean_tokens": 12621,
+   "mean_llm_steps": 4,
+   "approved": 1,
+   "mean_references": 23
+  },
+  "mapping_jaccard": 0.67
+ },
+ "runs": [
+  {
+   "id": "ransomware-precursor",
+   "langgraph": {
+    "seconds": 6.32,
+    "tokens": 9158,
+    "llm_steps": 4,
+    "mapping": [
+     "T1486",
+     "T1490"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 14
+   },
+   "crewai": {
+    "error": "ValueError: Invalid response from LLM call - None or empty."
+   }
+  },
+  {
+   "id": "scheduled-task-persistence",
+   "crewai": {
+    "error": "BadRequestError: Error code: 400 - {'error': {'message': 'Tool choice is none, but model called a tool', 'type': 'invalid_request_error', 'code': 'tool_use_failed', 'failed_generation': '{\"name\": \"Answer\", \"arguments\": {\\n  \"title\": \"Response Playbook for Malicious Scheduled Task Creation on HR-LAPTOP-22\",\\n  \"execu"
+   },
+   "langgraph": {
+    "seconds": 5.61,
+    "tokens": 8946,
+    "llm_steps": 4,
+    "mapping": [
+     "T1053.005",
+     "T1059.001"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 13
+   }
+  },
+  {
+   "id": "linux-webshell-cron",
+   "langgraph": {
+    "seconds": 11.68,
+    "tokens": 18253,
+    "llm_steps": 6,
+    "mapping": [
+     "T1053.003",
+     "T1505.003",
+     "T1059.004"
+    ],
+    "verdict": "approve",
+    "revisions": 1,
+    "references": 15
+   },
+   "crewai": {
+    "error": "ValueError: Invalid response from LLM call - None or empty."
+   }
+  },
+  {
+   "id": "lsass-access",
+   "crewai": {
+    "error": "ValidationError: 1 validation error for Playbook\n  Invalid JSON: EOF while parsing a list at line 48 column 5 [type=json_invalid, input_value='{\\n  \"title\": \"Credentia...M1028\", \"M1025\"]\\n    }', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+   },
+   "langgraph": {
+    "seconds": 7.24,
+    "tokens": 9084,
+    "llm_steps": 4,
+    "mapping": [
+     "T1003.001",
+     "T1078.002"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 14
+   }
+  },
+  {
+   "id": "cloud-key-abuse",
+   "langgraph": {
+    "seconds": 7.92,
+    "tokens": 9650,
+    "llm_steps": 4,
+    "mapping": [
+     "T1078.004",
+     "T1098.003",
+     "T1530"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 20
+   },
+   "crewai": {
+    "error": "ValueError: Invalid response from LLM call - None or empty."
+   }
+  },
+  {
+   "id": "ics-setpoint-write",
+   "crewai": {
+    "error": "ValidationError: 1 validation error for Mapping\n  Invalid JSON: EOF while parsing a list at line 7 column 5 [type=json_invalid, input_value='{\\n  \"matches\": [\\n    {... limits by 300%\"\\n    }', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+   },
+   "langgraph": {
+    "seconds": 9.71,
+    "tokens": 17205,
+    "llm_steps": 6,
+    "mapping": [
+     "T0836",
+     "T0843.001",
+     "T0858"
+    ],
+    "verdict": "revise",
+    "revisions": 1,
+    "references": 19
+   }
+  },
+  {
+   "id": "prompt-injection",
+   "langgraph": {
+    "seconds": 6.12,
+    "tokens": 9492,
+    "llm_steps": 4,
+    "mapping": [
+     "T1059.001",
+     "T1105",
+     "T1564.003"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 14
+   },
+   "crewai": {
+    "seconds": 9.21,
+    "tokens": 12621,
+    "llm_steps": 4,
+    "llm_requests": 4,
+    "mapping": [
+     "T1059.001",
+     "T1105"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 23
+   }
+  }
+ ]
+}

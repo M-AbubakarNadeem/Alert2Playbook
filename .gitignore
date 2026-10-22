@@ -18,5 +18,5 @@ data/raw/
 eval/alerts.jsonl
 eval/results/triage-cache.json
 
-# vercel
+# vercel (the CLI also writes .env.local, covered by .env.* above)
 .vercel/

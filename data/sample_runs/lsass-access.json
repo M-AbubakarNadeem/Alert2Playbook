@@ -1,0 +1,888 @@
+{
+ "alert": "Sysmon EventID 10 (ProcessAccess)\nComputer: DC-02.corp.local\nSourceImage: C:\\Users\\Public\\Libraries\\svchost.exe  (unsigned, first seen 6 minutes ago)\nTargetImage: C:\\Windows\\System32\\lsass.exe\nGrantedAccess: 0x1010\nSourceUser: CORP\\it.helpdesk\nPreceded by Security EventID 4624 Logon Type 10 (RemoteInteractive) for CORP\\it.helpdesk from 10.20.4.77 at an unusual hour.\nFollowed by Security EventID 4672 Special privileges assigned to new logon.",
+ "revisions": 1,
+ "steps": [
+  {
+   "node": "screen",
+   "ms": 187,
+   "score": 0.0007325026672333479,
+   "flagged": false
+  },
+  {
+   "node": "triage",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 1136,
+   "input_tokens": 1190,
+   "output_tokens": 372
+  },
+  {
+   "node": "retrieve",
+   "ms": 1213,
+   "mode": "hybrid (Pinecone dense + BM25, RRF)",
+   "queries": 11
+  },
+  {
+   "node": "map_attack",
+   "model": "openai/gpt-oss-20b",
+   "ms": 819,
+   "input_tokens": 1888,
+   "output_tokens": 172,
+   "rejected_ids": []
+  },
+  {
+   "node": "enrich",
+   "ms": 0,
+   "graph_nodes": 26
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 2992,
+   "input_tokens": 2297,
+   "output_tokens": 1095
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 8927,
+   "input_tokens": 2008,
+   "output_tokens": 253,
+   "verdict": "revise"
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 22336,
+   "input_tokens": 3459,
+   "output_tokens": 1122
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 1824,
+   "input_tokens": 2044,
+   "output_tokens": 219,
+   "verdict": "revise"
+  }
+ ],
+ "guard": {
+  "score": 0.0007325026672333479,
+  "flagged": false
+ },
+ "triage": {
+  "summary": "User CORP\\it.helpdesk remotely logged into domain controller DC-02.corp.local from 10.20.4.77 and ran an unsigned svchost.exe from C:\\Users\\Public\\Libraries that accessed lsass.exe, consistent with credential dumping.",
+  "platform": "windows",
+  "severity": "critical",
+  "severity_reason": "Credential dumping from LSASS on a domain controller by a remote user indicates likely domain compromise.",
+  "behaviors": [
+   "remotely logging in to a domain controller with an unusual logon type",
+   "executing an unsigned masquerading process from a public user directory",
+   "accessing the LSASS process to read credentials",
+   "gaining special privileges on the domain controller"
+  ],
+  "technique_hints": [
+   "Credential Access: OS Credential Dumping",
+   "Credential Access: Security Account Manager",
+   "Defense Evasion: Masquerading",
+   "Privilege Escalation: Valid Accounts",
+   "Lateral Movement: Remote Desktop Protocol"
+  ],
+  "observables": {
+   "hosts": [
+    "DC-02.corp.local",
+    "10.20.4.77"
+   ],
+   "users": [
+    "CORP\\it.helpdesk"
+   ],
+   "processes": [
+    "C:\\Users\\Public\\Libraries\\svchost.exe",
+    "C:\\Windows\\System32\\lsass.exe"
+   ],
+   "files": [
+    "C:\\Users\\Public\\Libraries\\svchost.exe",
+    "C:\\Windows\\System32\\lsass.exe"
+   ],
+   "network": [],
+   "registry": []
+  }
+ },
+ "candidates": [
+  {
+   "id": "T1003.006",
+   "name": "OS Credential Dumping: DCSync",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.1789,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.001",
+   "name": "OS Credential Dumping: LSASS Memory",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.168,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1556.001",
+   "name": "Modify Authentication Process: Domain Controller Authentication",
+   "tactics": [
+    "defense-impairment",
+    "persistence",
+    "credential-access"
+   ],
+   "score": 0.1351,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.005",
+   "name": "OS Credential Dumping: Cached Domain Credentials",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.1333,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.003",
+   "name": "OS Credential Dumping: NTDS",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.1332,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1078.003",
+   "name": "Valid Accounts: Local Accounts",
+   "tactics": [
+    "stealth",
+    "persistence",
+    "privilege-escalation",
+    "initial-access"
+   ],
+   "score": 0.1264,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.002",
+   "name": "OS Credential Dumping: Security Account Manager",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.1245,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.004",
+   "name": "OS Credential Dumping: LSA Secrets",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.1192,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1078.002",
+   "name": "Valid Accounts: Domain Accounts",
+   "tactics": [
+    "stealth",
+    "persistence",
+    "privilege-escalation",
+    "initial-access"
+   ],
+   "score": 0.1168,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1556",
+   "name": "Modify Authentication Process",
+   "tactics": [
+    "defense-impairment",
+    "persistence",
+    "credential-access"
+   ],
+   "score": 0.1156,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1098.007",
+   "name": "Account Manipulation: Additional Local or Domain Groups",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.108,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1547.008",
+   "name": "Boot or Logon Autostart Execution: LSASS Driver",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.1044,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003",
+   "name": "OS Credential Dumping",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.1028,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1556.008",
+   "name": "Modify Authentication Process: Network Provider DLL",
+   "tactics": [
+    "defense-impairment",
+    "persistence",
+    "credential-access"
+   ],
+   "score": 0.1003,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1552.001",
+   "name": "Unsecured Credentials: Credentials In Files",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0945,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1558.003",
+   "name": "Steal or Forge Kerberos Tickets: Kerberoasting",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0886,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1552.006",
+   "name": "Unsecured Credentials: Group Policy Preferences",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0842,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1547.005",
+   "name": "Boot or Logon Autostart Execution: Security Support Provider",
+   "tactics": [
+    "persistence",
+    "privilege-escalation"
+   ],
+   "score": 0.0839,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1003.007",
+   "name": "OS Credential Dumping: Proc Filesystem",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0815,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1558.001",
+   "name": "Steal or Forge Kerberos Tickets: Golden Ticket",
+   "tactics": [
+    "credential-access"
+   ],
+   "score": 0.0786,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0859",
+   "name": "Valid Accounts",
+   "tactics": [
+    "persistence",
+    "lateral-movement"
+   ],
+   "score": 0.0779,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1207",
+   "name": "Rogue Domain Controller",
+   "tactics": [
+    "defense-impairment"
+   ],
+   "score": 0.0771,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1078",
+   "name": "Valid Accounts",
+   "tactics": [
+    "stealth",
+    "persistence",
+    "privilege-escalation",
+    "initial-access"
+   ],
+   "score": 0.071,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1021",
+   "name": "Remote Services",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.0709,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1134.005",
+   "name": "Access Token Manipulation: SID-History Injection",
+   "tactics": [
+    "stealth",
+    "privilege-escalation"
+   ],
+   "score": 0.0698,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  }
+ ],
+ "mapping": [
+  {
+   "technique_id": "T1003.001",
+   "confidence": "high",
+   "evidence": "TargetImage: C:\\Windows\\System32\\lsass.exe",
+   "name": "OS Credential Dumping: LSASS Memory"
+  },
+  {
+   "technique_id": "T1556.001",
+   "confidence": "medium",
+   "evidence": "Followed by Security EventID 4672 Special privileges assigned to new logon.",
+   "name": "Modify Authentication Process: Domain Controller Authentication"
+  }
+ ],
+ "context": {
+  "techniques": [
+   {
+    "id": "T1003.001",
+    "name": "OS Credential Dumping: LSASS Memory",
+    "url": "https://attack.mitre.org/techniques/T1003/001/",
+    "domain": "enterprise",
+    "tactics": [
+     "credential-access"
+    ],
+    "platforms": [
+     "Windows"
+    ],
+    "description": "Adversaries may attempt to access credential material stored in the process memory of the Local Security Authority Subsystem Service (LSASS). After a user logs on, the system generates and stores a variety of credential materials in LSASS process memory. These credential materials can be harvested by an administrative user or SYSTEM and used to conduct Lateral Movement using Use Alternate Authentication Material. As well as in-memory techniques, the LSASS process memory can be dumped from the target host and analyzed on a local system.",
+    "parent": "T1003",
+    "used_by": 79,
+    "mitigations": [
+     {
+      "id": "M1017",
+      "name": "User Training",
+      "description": "User Training involves educating employees and contractors on recognizing, reporting, and preventing cyber threats that rely on human interaction, such as phishing, social engineering, and other manipulative techniques. Comprehensive training programs create a human firewall by empowering users to be an active component of the organization's cybersecurity defenses.",
+      "url": "https://attack.mitre.org/mitigations/M1017/"
+     },
+     {
+      "id": "M1025",
+      "name": "Privileged Process Integrity",
+      "description": "Privileged Process Integrity focuses on defending highly privileged processes (e.g., system services, antivirus, or authentication processes) from tampering, injection, or compromise by adversaries. These processes often interact with critical components, making them prime targets for techniques like code injection, privilege escalation, and process manipulation.",
+      "url": "https://attack.mitre.org/mitigations/M1025/"
+     },
+     {
+      "id": "M1026",
+      "name": "Privileged Account Management",
+      "description": "Privileged Account Management focuses on implementing policies, controls, and tools to securely manage privileged accounts (e.g., SYSTEM, root, or administrative accounts).",
+      "url": "https://attack.mitre.org/mitigations/M1026/"
+     },
+     {
+      "id": "M1027",
+      "name": "Password Policies",
+      "description": "Set and enforce secure password policies for accounts to reduce the likelihood of unauthorized access. Strong password policies include enforcing password complexity, requiring regular password changes, and preventing password reuse.",
+      "url": "https://attack.mitre.org/mitigations/M1027/"
+     },
+     {
+      "id": "M1028",
+      "name": "Operating System Configuration",
+      "description": "Operating System Configuration involves adjusting system settings and hardening the default configurations of an operating system (OS) to mitigate adversary exploitation and prevent abuse of system functionality. Proper OS configurations address security vulnerabilities, limit attack surfaces, and ensure robust defense against a wide range of techniques.",
+      "url": "https://attack.mitre.org/mitigations/M1028/"
+     },
+     {
+      "id": "M1040",
+      "name": "Behavior Prevention on Endpoint",
+      "description": "Behavior Prevention on Endpoint refers to the use of technologies and strategies to detect and block potentially malicious activities by analyzing the behavior of processes, files, API calls, and other endpoint events.",
+      "url": "https://attack.mitre.org/mitigations/M1040/"
+     },
+     {
+      "id": "M1043",
+      "name": "Credential Access Protection",
+      "description": "Credential Access Protection focuses on implementing measures to prevent adversaries from obtaining credentials, such as passwords, hashes, tokens, or keys, that could be used for unauthorized access.",
+      "url": "https://attack.mitre.org/mitigations/M1043/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0363",
+      "name": "Detection of Credential Dumping from LSASS Memory via Access and Dump Sequence",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "A non-privileged or abnormal process attempts to open a handle with full access (0x1F0FFF) to lsass.exe and subsequently invokes memory dump, file creation, or registry modification indicative of credential scraping. This behavior chain reflects staged credential theft activity.",
+        "log_sources": [
+         "WinEventLog:Security",
+         "WinEventLog:Sysmon"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0363/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-PLA",
+       "name": "Process Lineage Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessLineageAnalysis/"
+      },
+      {
+       "id": "D3-PSA",
+       "name": "Process Spawn Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSpawnAnalysis/"
+      },
+      {
+       "id": "D3-PSMD",
+       "name": "Process Self-Modification Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-ABPI",
+       "name": "Application-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Application-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-HBPI",
+       "name": "Hardware-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Hardware-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-KBPI",
+       "name": "Kernel-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Kernel-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-SCF",
+       "name": "System Call Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallFiltering/"
+      },
+      {
+       "id": "D3-WSAM",
+       "name": "Web Session Access Mediation",
+       "url": "https://d3fend.mitre.org/technique/d3f:WebSessionAccessMediation/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-HR",
+       "name": "Host Reboot",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostReboot/"
+      },
+      {
+       "id": "D3-HS",
+       "name": "Host Shutdown",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostShutdown/"
+      },
+      {
+       "id": "D3-PS",
+       "name": "Process Suspension",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSuspension/"
+      },
+      {
+       "id": "D3-PT",
+       "name": "Process Termination",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessTermination/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T1556.001",
+    "name": "Modify Authentication Process: Domain Controller Authentication",
+    "url": "https://attack.mitre.org/techniques/T1556/001/",
+    "domain": "enterprise",
+    "tactics": [
+     "defense-impairment",
+     "persistence",
+     "credential-access"
+    ],
+    "platforms": [
+     "Windows"
+    ],
+    "description": "Adversaries may patch the authentication process on a domain controller to bypass the typical authentication mechanisms and enable access to accounts. Malware may be used to inject false credentials into the authentication process on a domain controller with the intent of creating a backdoor used to access any user\u2019s account and/or credentials (ex: Skeleton Key). Skeleton key works through a patch on an enterprise domain controller authentication process (LSASS) with credentials that adversaries may use to bypass the standard authentication system. Once patched, an adversary can use the injected password to successfully authenticate as any domain user account (until the the skeleton key is erased from memory by a reboot of the domain controller). Authenticated access may enable unfettered access to hosts and/or resources within single-factor authentication environments.",
+    "parent": "T1556",
+    "used_by": 2,
+    "mitigations": [
+     {
+      "id": "M1017",
+      "name": "User Training",
+      "description": "User Training involves educating employees and contractors on recognizing, reporting, and preventing cyber threats that rely on human interaction, such as phishing, social engineering, and other manipulative techniques. Comprehensive training programs create a human firewall by empowering users to be an active component of the organization's cybersecurity defenses.",
+      "url": "https://attack.mitre.org/mitigations/M1017/"
+     },
+     {
+      "id": "M1025",
+      "name": "Privileged Process Integrity",
+      "description": "Privileged Process Integrity focuses on defending highly privileged processes (e.g., system services, antivirus, or authentication processes) from tampering, injection, or compromise by adversaries. These processes often interact with critical components, making them prime targets for techniques like code injection, privilege escalation, and process manipulation.",
+      "url": "https://attack.mitre.org/mitigations/M1025/"
+     },
+     {
+      "id": "M1026",
+      "name": "Privileged Account Management",
+      "description": "Privileged Account Management focuses on implementing policies, controls, and tools to securely manage privileged accounts (e.g., SYSTEM, root, or administrative accounts).",
+      "url": "https://attack.mitre.org/mitigations/M1026/"
+     },
+     {
+      "id": "M1032",
+      "name": "Multi-factor Authentication",
+      "description": "Multi-Factor Authentication (MFA) enhances security by requiring users to provide at least two forms of verification to prove their identity before granting access. These factors typically include: - *Something you know*: Passwords, PINs. - *Something you have*: Physical tokens, smartphone authenticator apps.",
+      "url": "https://attack.mitre.org/mitigations/M1032/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0271",
+      "name": "Detect Domain Controller Authentication Process Modification (Skeleton Key)",
+      "analytics": [
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Detects anomalous process access to LSASS on domain controllers, suspicious module loads of authentication DLLs, and registry or file modifications indicative of Skeleton Key\u2013style patching. Correlates LSASS access attempts with subsequent abnormal logon activity patterns.",
+        "log_sources": [
+         "WinEventLog:Security",
+         "WinEventLog:Sysmon",
+         "WinEventLog:System"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0271/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-PLA",
+       "name": "Process Lineage Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessLineageAnalysis/"
+      },
+      {
+       "id": "D3-PSA",
+       "name": "Process Spawn Analysis",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSpawnAnalysis/"
+      },
+      {
+       "id": "D3-PSMD",
+       "name": "Process Self-Modification Detection",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-ABPI",
+       "name": "Application-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Application-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-HBPI",
+       "name": "Hardware-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Hardware-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-KBPI",
+       "name": "Kernel-based Process Isolation",
+       "url": "https://d3fend.mitre.org/technique/d3f:Kernel-basedProcessIsolation/"
+      },
+      {
+       "id": "D3-SCF",
+       "name": "System Call Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:SystemCallFiltering/"
+      },
+      {
+       "id": "D3-WSAM",
+       "name": "Web Session Access Mediation",
+       "url": "https://d3fend.mitre.org/technique/d3f:WebSessionAccessMediation/"
+      }
+     ],
+     "Evict": [
+      {
+       "id": "D3-HR",
+       "name": "Host Reboot",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostReboot/"
+      },
+      {
+       "id": "D3-HS",
+       "name": "Host Shutdown",
+       "url": "https://d3fend.mitre.org/technique/d3f:HostShutdown/"
+      },
+      {
+       "id": "D3-PS",
+       "name": "Process Suspension",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessSuspension/"
+      },
+      {
+       "id": "D3-PT",
+       "name": "Process Termination",
+       "url": "https://d3fend.mitre.org/technique/d3f:ProcessTermination/"
+      }
+     ]
+    }
+   }
+  ],
+  "allowed_refs": [
+   "D3-ABPI",
+   "D3-HBPI",
+   "D3-HR",
+   "D3-HS",
+   "D3-KBPI",
+   "D3-PLA",
+   "D3-PS",
+   "D3-PSA",
+   "D3-PSMD",
+   "D3-PT",
+   "D3-SCF",
+   "D3-WSAM",
+   "DET0271",
+   "DET0363",
+   "M1017",
+   "M1025",
+   "M1026",
+   "M1027",
+   "M1028",
+   "M1032",
+   "M1040",
+   "M1043",
+   "T1003",
+   "T1003.001",
+   "T1556",
+   "T1556.001"
+  ]
+ },
+ "playbook": {
+  "title": "Credential Dumping via Unauthorized svchost on DC-02",
+  "executive_summary": "A remote interactive RDP logon (Logon Type 10) by CORP\\it.helpdesk from 10.20.4.77 launched an unsigned svchost.exe that accessed LSASS on DC-02.corp.local, indicating credential dumping (T1003.001). Immediate containment, evidence collection, eradication, recovery, and hardening are required to protect the domain.",
+  "detection_and_analysis": [
+   {
+    "action": "Collect volatile memory and process state from DC-02.corp.local",
+    "detail": "Acquire a RAM image and list of running processes, focusing on svchost.exe and LSASS handles, using a trusted forensic tool.",
+    "references": []
+   },
+   {
+    "action": "Correlate Sysmon EventID 10 with Security EventIDs 4624 and 4672",
+    "detail": "Search WinEventLog:Security and WinEventLog:Sysmon for the timestamps of the remote RDP logon and LSASS access to confirm scope and identify related events.",
+    "references": [
+     "DET0363"
+    ]
+   },
+   {
+    "action": "Identify additional hosts using the same credentials",
+    "detail": "Query domain controller logs for other Logon Type 10 events by CORP\\it.helpdesk around the same time across the network.",
+    "references": []
+   }
+  ],
+  "containment": [
+   {
+    "action": "Isolate DC-02.corp.local from the network",
+    "detail": "Place the server in a quarantine VLAN and disable remote RDP to stop further credential exfiltration.",
+    "references": [
+     "D3-ABPI"
+    ]
+   },
+   {
+    "action": "Terminate the malicious svchost.exe process",
+    "detail": "Use taskkill or PowerShell to stop C:\\Users\\Public\\Libraries\\svchost.exe and revoke its token.",
+    "references": [
+     "D3-PT"
+    ]
+   },
+   {
+    "action": "Disable the account CORP\\it.helpdesk temporarily",
+    "detail": "Lock the account in Active Directory and reset its password to prevent reuse.",
+    "references": [
+     "M1026"
+    ]
+   }
+  ],
+  "eradication": [
+   {
+    "action": "Remove the unsigned svchost.exe file",
+    "detail": "Delete C:\\Users\\Public\\Libraries\\svchost.exe and any related artifacts; verify file hash is no longer present.",
+    "references": []
+   },
+   {
+    "action": "Scan DC-02 for additional malicious modules",
+    "detail": "Run a full anti\u2011malware scan and verify no other unauthorized binaries are present.",
+    "references": []
+   },
+   {
+    "action": "Reset LSASS security descriptors to default",
+    "detail": "Reapply default permissions so only SYSTEM and authorized services can access LSASS.",
+    "references": [
+     "M1025"
+    ]
+   }
+  ],
+  "recovery": [
+   {
+    "action": "Restore DC-02 from a known\u2011good backup or rebuild from a clean image",
+    "detail": "If integrity cannot be assured, reinstall the OS, apply latest patches, and re\u2011join it to the domain.",
+    "references": []
+   },
+   {
+    "action": "Re\u2011enable the CORP\\it.helpdesk account with MFA",
+    "detail": "After investigation, reactivate the account and enforce multi\u2011factor authentication.",
+    "references": [
+     "M1032"
+    ]
+   },
+   {
+    "action": "Enable continuous monitoring for LSASS access attempts",
+    "detail": "Deploy real\u2011time alerts for Sysmon EventID 10 targeting LSASS on all domain controllers.",
+    "references": [
+     "DET0363"
+    ]
+   }
+  ],
+  "hardening": [
+   {
+    "action": "Enforce privileged process integrity for LSASS",
+    "detail": "Configure Windows Defender Application Control or similar to block unsigned binaries from accessing LSASS.",
+    "references": [
+     "M1025"
+    ]
+   },
+   {
+    "action": "Implement strict privileged account management",
+    "detail": "Require Just\u2011In\u2011Time elevation and limit remote interactive logons for high\u2011privilege accounts.",
+    "references": [
+     "M1026"
+    ]
+   },
+   {
+    "action": "Apply OS configuration hardening",
+    "detail": "Enable Credential Guard and restrict remote interactive logons to approved admin workstations.",
+    "references": [
+     "M1028"
+    ]
+   }
+  ],
+  "hunt_leads": [
+   {
+    "log_source": "WinEventLog:Security",
+    "look_for": "Additional Logon Type 10 events by CORP\\it.helpdesk or other privileged accounts outside business hours"
+   },
+   {
+    "log_source": "WinEventLog:Sysmon",
+    "look_for": "ProcessAccess events where GrantedAccess includes 0x1010 to lsass.exe from non\u2011system binaries"
+   },
+   {
+    "log_source": "WinEventLog:Sysmon",
+    "look_for": "Repeated credential\u2011dumping patterns such as consecutive LSASS handle opens from the same source host"
+   }
+  ]
+ },
+ "review": {
+  "verdict": "revise",
+  "issues": [
+   "Mapped technique T1556.001 (Modify Authentication Process: LLMNR/NBT-NS Poisoning and SMB Relay) is not supported by the alert. The alert shows a legitimate RDP logon (Logon Type 10) followed by LSASS access \u2014 there is no evidence of name-service poisoning or SMB relay. Remove T1556.001 from the mapped techniques.",
+   "The containment step 'Terminate the malicious svchost.exe process' (taskkill/PowerShell) destroys volatile evidence (process memory, handles) before it is collected. The detection phase only says to 'collect volatile memory and process state' but does not guarantee it is completed before termination. The playbook should explicitly require that a full memory capture and process handle dump be completed and verified before the process is terminated, or the termination step should be removed/\u63a8\u8fdf"
+  ],
+  "auto_issues": []
+ },
+ "status": "awaiting_analyst_with_open_issues",
+ "saved_at": "2026-10-22"
+}

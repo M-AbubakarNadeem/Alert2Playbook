@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alert2Playbook</title>
+<meta name="description" content="Paste a security alert. A team of AI agents explains what happened and writes a step-by-step response plan, grounded in MITRE ATT&CK and D3FEND.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+<script>
+  try { const t = localStorage.getItem("a2p-theme-v2"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#try" aria-label="Alert2Playbook home">
+      <span class="brand-mark" aria-hidden="true">A2P</span>
+      <span><b>Alert2Playbook</b><small>Security alert in, response plan out</small></span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" data-tab="try" aria-selected="true">▶ Try it</button>
+      <button class="tab" role="tab" data-tab="how" aria-selected="false">🧭 How it works</button>
+      <button class="tab" role="tab" data-tab="good" aria-selected="false">📊 How good is it</button>
+      <button class="tab" role="tab" data-tab="dev" aria-selected="false">🧑‍💻 For developers</button>
+    </nav>
+    <div class="top-right">
+      <button class="icon-btn lock" id="lock-chip" type="button" title="Live runs need a demo code">🔒 Live runs locked</button>
+      <a class="icon-btn" href="https://github.com/M-AbubakarNadeem/Alert2Playbook" target="_blank" rel="noopener">GitHub</a>
+      <button class="icon-btn" id="theme" type="button" aria-label="Switch light or dark">🌓</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- =========================================================== TRY IT -->
+  <section class="panel active" id="panel-try" role="tabpanel">
+    <div class="hero">
+      <h1>A security alarm went off. What now?</h1>
+      <p>Pick an alert (or write your own). A team of 7 AI helpers works it out step by step and writes a plan to fix it. You watch every step, and you have the final say.</p>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">1</span> Pick an alert</h2>
+      <p class="lead">An <b>alert</b> is a message from a security tool saying "something strange happened here". Each card below is a real-looking alert.</p>
+      <div class="picks" id="picks"><div class="skeleton"></div><div class="skeleton"></div></div>
+
+      <div id="builder" class="card builder" hidden></div>
+
+      <details class="alert-box" id="alert-box">
+        <summary>See or edit the alert text</summary>
+        <p class="small muted">This is exactly what the agents will read. You can change it.</p>
+        <textarea id="alert" spellcheck="false" aria-label="Alert text" placeholder="Paste an alert here, or pick one above."></textarea>
+        <div class="row xs muted"><span id="count">0 / 4,000 characters</span></div>
+      </details>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">2</span> Start the agents</h2>
+      <div class="card">
+        <div class="start">
+          <button class="btn primary big" id="start" type="button" disabled>▶ Start the agents</button>
+          <p class="start-note" id="start-note">Pick an alert first.</p>
+        </div>
+        <div id="code-area" hidden>
+          <div class="code-row">
+            <input id="code" type="password" autocomplete="off" placeholder="Demo code" aria-label="Demo code">
+            <button class="btn" id="code-go" type="button">Unlock</button>
+          </div>
+          <div id="code-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">3</span> Watch them work</h2>
+      <p class="lead">Each box is one helper. It lights up while it works. <b>Click any box</b> to see what it received, what it sent back, and who did the work.</p>
+      <div class="steps" id="steps"></div>
+      <div class="totals" id="totals" hidden></div>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">4</span> Read the plan</h2>
+      <div class="card" id="result">
+        <div class="empty"><div class="ico">📄</div><p>The plan appears here when the helpers finish.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================== HOW IT WORKS -->
+  <section class="panel" id="panel-how" role="tabpanel">
+    <div class="hero">
+      <h1>How it works</h1>
+      <p>Every part of the system, what it does, and the exact messages that travel between the parts. Click anything to see more.</p>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">1</span> The big picture</h2>
+      <p class="lead">These are the parts. Click one to see what it is.</p>
+      <div class="map" id="map"></div>
+      <div class="card detail" id="map-detail"></div>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">2</span> The messages, in order</h2>
+      <p class="lead">When you press Start, these messages travel between the parts. Click one to see its real format.</p>
+      <div class="messages" id="messages"></div>
+      <div class="card detail" id="message-detail"></div>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">3</span> The life of one alert</h2>
+      <p class="lead">Follow the "Backups wiped" sample through all 8 steps, with the real data from a real run.</p>
+      <div class="story" id="story"><div class="skeleton"></div></div>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">4</span> Why you can trust the answer</h2>
+      <div class="gloss" id="trust"></div>
+    </div>
+
+    <div class="section">
+      <h2 class="step-title"><span class="num">5</span> Words used here</h2>
+      <div class="gloss" id="glossary"></div>
+    </div>
+  </section>
+
+  <!-- =========================================================== HOW GOOD -->
+  <section class="panel" id="panel-good" role="tabpanel">
+    <div class="hero">
+      <h1>How good is it?</h1>
+      <p>We tested it on alerts where we already knew the right answer, and compared it with the same system built another way. Here are the honest numbers, including the weak spots.</p>
+    </div>
+    <div id="good"><div class="skeleton"></div><div class="skeleton"></div></div>
+  </section>
+
+  <!-- =========================================================== DEVELOPERS -->
+  <section class="panel" id="panel-dev" role="tabpanel">
+    <div class="hero">
+      <h1>For developers</h1>
+      <p>Call it from your own code, from another AI agent (A2A), or from an AI assistant like Claude (MCP).</p>
+    </div>
+    <div id="dev"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p id="config">Loading…</p>
+    <p>Built on MITRE ATT&amp;CK® (Enterprise and ICS) and MITRE D3FEND™. © The MITRE Corporation, used under the ATT&amp;CK Terms of Use. The plan is a draft for a person to check, never an automatic action.</p>
+    <p>Public demo: live runs are logged for debugging, so never paste real confidential alerts. Made by Muhammad Abubakar Nadeem · <a href="https://github.com/M-AbubakarNadeem/Alert2Playbook" target="_blank" rel="noopener">source code</a>.</p>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawer-title">
+  <header>
+    <div class="spacer"><div class="xs muted" id="drawer-kicker"></div><h3 id="drawer-title"></h3></div>
+    <button class="btn small" id="drawer-close" type="button">Close ✕</button>
+  </header>
+  <div class="body" id="drawer-body"></div>
+</aside>
+
+<script src="/content.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

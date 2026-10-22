@@ -1,0 +1,950 @@
+{
+ "alert": "OT network monitor alert - Purdue Level 1/2\nSource: EWS-03 (engineering workstation, 10.50.2.13)  Destination: PLC-07 (water treatment dosing, 10.50.1.27)\n02:41:05 Modbus/TCP function code 16 (Write Multiple Registers) to holding registers 40001-40010 (chlorine dosing setpoints). New values exceed engineering limits by 300%.\n02:41:19 Vendor protocol command: change PLC operating mode RUN -> PROGRAM\n02:42:02 Program download to PLC-07 (logic block OB1 modified)\nNo approved change request or maintenance window. Operator HMI-02 shows no alarm because alarm thresholds on the same PLC were modified at 02:40:51.",
+ "revisions": 0,
+ "steps": [
+  {
+   "node": "screen",
+   "ms": 187,
+   "score": 0.0005729568074457347,
+   "flagged": false
+  },
+  {
+   "node": "triage",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 1252,
+   "input_tokens": 1238,
+   "output_tokens": 367
+  },
+  {
+   "node": "retrieve",
+   "ms": 1325,
+   "mode": "hybrid (Pinecone dense + BM25, RRF)",
+   "queries": 10
+  },
+  {
+   "node": "map_attack",
+   "model": "openai/gpt-oss-20b",
+   "ms": 831,
+   "input_tokens": 1606,
+   "output_tokens": 252,
+   "rejected_ids": []
+  },
+  {
+   "node": "enrich",
+   "ms": 0,
+   "graph_nodes": 28
+  },
+  {
+   "node": "write_playbook",
+   "model": "openai/gpt-oss-120b",
+   "ms": 15118,
+   "input_tokens": 2756,
+   "output_tokens": 1034
+  },
+  {
+   "node": "critic",
+   "model": "qwen/qwen3.8-27b",
+   "ms": 5438,
+   "input_tokens": 2040,
+   "output_tokens": 27,
+   "verdict": "approve"
+  }
+ ],
+ "guard": {
+  "score": 0.0005729568074457347,
+  "flagged": false
+ },
+ "triage": {
+  "summary": "An unapproved change was made from engineering workstation EWS-03 to water-treatment PLC-07: chlorine dosing setpoints were written 300% above engineering limits, the PLC was switched from RUN to PROGRAM mode, and a modified logic block (OB1) was downloaded, after alarm thresholds had been altered to suppress HMI alarms.",
+  "platform": "cloud",
+  "severity": "critical",
+  "severity_reason": "Unapproved modification of water-treatment chlorine dosing setpoints and PLC logic, with alarm suppression, poses an immediate risk of process disruption and potential public-health or environmental harm.",
+  "behaviors": [
+   "writing out-of-range setpoints to PLC holding registers via Modbus/TCP",
+   "changing PLC operating mode from RUN to PROGRAM",
+   "downloading a modified logic program to the PLC",
+   "modifying alarm thresholds to suppress operator alarms"
+  ],
+  "technique_hints": [
+   "Modify Parameter",
+   "Inhibit System Function",
+   "Impact: Disruption",
+   "Impact: Destruction of Physical Equipment"
+  ],
+  "observables": {
+   "hosts": [
+    "EWS-03",
+    "10.50.2.13",
+    "PLC-07",
+    "10.50.1.27",
+    "HMI-02"
+   ],
+   "users": [],
+   "processes": [],
+   "files": [
+    "logic block OB1"
+   ],
+   "network": [
+    "Modbus/TCP function code 16",
+    "holding registers 40001-40010"
+   ],
+   "registry": []
+  }
+ },
+ "candidates": [
+  {
+   "id": "T0836",
+   "name": "Modify Parameter",
+   "tactics": [
+    "impair-process-control"
+   ],
+   "score": 1.0,
+   "sources": [
+    "name"
+   ]
+  },
+  {
+   "id": "T0838",
+   "name": "Modify Alarm Settings",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.1675,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0843.001",
+   "name": "Program Download: Download All",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.1554,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0858",
+   "name": "Change Operating Mode",
+   "tactics": [
+    "execution",
+    "evasion"
+   ],
+   "score": 0.1523,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0843.002",
+   "name": "Program Download: Online Edit",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.1511,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0873",
+   "name": "Project File Infection",
+   "tactics": [
+    "persistence"
+   ],
+   "score": 0.1499,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0845",
+   "name": "Program Upload",
+   "tactics": [
+    "collection"
+   ],
+   "score": 0.1488,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0835",
+   "name": "Manipulate I/O Image",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.1473,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0877",
+   "name": "I/O Image",
+   "tactics": [
+    "collection"
+   ],
+   "score": 0.1469,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0868",
+   "name": "Detect Operating Mode",
+   "tactics": [
+    "collection"
+   ],
+   "score": 0.1408,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0843.003",
+   "name": "Program Download: Program Append",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.1376,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0873.001",
+   "name": "Project File Infection: Siemens Project File Format",
+   "tactics": [
+    "persistence"
+   ],
+   "score": 0.1365,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0831",
+   "name": "Manipulation of Control",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.1349,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0889",
+   "name": "Modify Program",
+   "tactics": [
+    "persistence"
+   ],
+   "score": 0.1273,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0878",
+   "name": "Alarm Suppression",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.1204,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0843",
+   "name": "Program Download",
+   "tactics": [
+    "lateral-movement"
+   ],
+   "score": 0.118,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0813",
+   "name": "Denial of Control",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.1092,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0821",
+   "name": "Modify Controller Tasking",
+   "tactics": [
+    "execution"
+   ],
+   "score": 0.0945,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0892",
+   "name": "Change Credential",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.0914,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1490",
+   "name": "Inhibit System Recovery",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.0881,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1691.002",
+   "name": "Block Operational Technology Message: Reporting Message",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.0846,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T1489",
+   "name": "Service Stop",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.084,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0837",
+   "name": "Loss of Protection",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.0834,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0829",
+   "name": "Loss of View",
+   "tactics": [
+    "impact"
+   ],
+   "score": 0.0829,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  },
+  {
+   "id": "T0800",
+   "name": "Activate Firmware Update Mode",
+   "tactics": [
+    "inhibit-response-function"
+   ],
+   "score": 0.0815,
+   "sources": [
+    "bm25",
+    "dense"
+   ]
+  }
+ ],
+ "mapping": [
+  {
+   "technique_id": "T0836",
+   "confidence": "high",
+   "evidence": "Modbus/TCP function code 16 (Write Multiple Registers) to holding registers 40001-40010 (chlorine dosing setpoints). New values exceed engineering limits by 300%",
+   "name": "Modify Parameter"
+  },
+  {
+   "technique_id": "T0838",
+   "confidence": "high",
+   "evidence": "operator HMI-02 shows no alarm because alarm thresholds on the same PLC were modified at 02:40:51",
+   "name": "Modify Alarm Settings"
+  },
+  {
+   "technique_id": "T0843.002",
+   "confidence": "medium",
+   "evidence": "Program download to PLC-07 (logic block OB1 modified)",
+   "name": "Program Download: Online Edit"
+  }
+ ],
+ "context": {
+  "techniques": [
+   {
+    "id": "T0836",
+    "name": "Modify Parameter",
+    "url": "https://attack.mitre.org/techniques/T0836/",
+    "domain": "ics",
+    "tactics": [
+     "impair-process-control"
+    ],
+    "platforms": [
+     "Embedded",
+     "Windows",
+     "Linux"
+    ],
+    "description": "Adversaries may modify parameters used to instruct industrial control system devices. These devices operate via programs that dictate how and when to perform actions based on such parameters. Such parameters can determine the extent to which an action is performed and may specify additional options. For example, a program on a control system device dictating motor processes may take a parameter defining the total number of seconds to run that motor. An adversary can potentially modify these parameters to produce an outcome outside of what was intended by the operators. By modifying system and process critical parameters, the adversary may cause Impact to equipment and/or control processes. Modified parameters may be turned into dangerous, out-of-bounds, or unexpected values from typical operations.",
+    "parent": null,
+    "used_by": 7,
+    "mitigations": [
+     {
+      "id": "M0800",
+      "name": "Authorization Enforcement",
+      "description": "The device or system should restrict read, manipulate, or execute privileges to only authenticated users who require access based on approved security policies. Role-based Access Control (RBAC) schemes can help reduce the overhead of assigning permissions to the large number of devices within an ICS.",
+      "url": "https://attack.mitre.org/mitigations/M0800/"
+     },
+     {
+      "id": "M0804",
+      "name": "Human User Authentication",
+      "description": "Require user authentication before allowing access to data or accepting commands to a device. While strong multi-factor authentication is preferable, it is not always feasible within ICS environments.",
+      "url": "https://attack.mitre.org/mitigations/M0804/"
+     },
+     {
+      "id": "M0818",
+      "name": "Validate Program Inputs",
+      "description": "Devices and programs designed to interact with control system parameters should validate the format and content of all user inputs and actions to ensure the values are within intended operational ranges. These values should be evaluated and further enforced through the program logic running on the field controller.",
+      "url": "https://attack.mitre.org/mitigations/M0818/"
+     },
+     {
+      "id": "M0947",
+      "name": "Audit",
+      "description": "Perform audits or scans of systems, permissions, insecure software, insecure configurations, etc. to identify potential weaknesses. Perform periodic integrity checks of the device to validate the correctness of the firmware, software, programs, and configurations.",
+      "url": "https://attack.mitre.org/mitigations/M0947/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0776",
+      "name": "Detection of Modify Parameter",
+      "analytics": [
+       {
+        "platforms": [
+         "Embedded"
+        ],
+        "description": "Real-time monitoring identifies an Industrial Control System (ICS) protocol write to a parameter/setpoint register where the written value falls outside the documented safe operating range, or where the write originates from a source not in the approved write-source list, correlated with subsequent historian tag drift.",
+        "log_sources": [
+         "NSM:Content",
+         "operationaldb:ProcessHistory",
+         "scada:applog"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Real-time monitoring identifies a Linux process invoking Industrial Control System (ICS) vendor write Application Programming Interfaces (APIs) or Open Platform Communications (OPC) Unified Architecture (UA) write calls to setpoint tags on field devices, from a User Identifier (UID) not associated with the authorized control application, with value",
+        "log_sources": [
+         "NSM:Content"
+        ]
+       },
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Real-time monitoring identifies a process on an Industrial Control System (ICS) Windows host writing setpoint values to Open Platform Communications (OPC) Data Access (DA)/Unified Architecture (UA) tags or historian writable tags without being the recognized Supervisory Control and Data Acquisition (SCADA) or Distributed Control System (DCS) contro",
+        "log_sources": [
+         "opc:applog"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0776/"
+     }
+    ],
+    "d3fend": {
+     "Isolate": [
+      {
+       "id": "D3-NTF",
+       "name": "Network Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficFiltering/"
+      },
+      {
+       "id": "D3-OVAR",
+       "name": "OT Variable Access Restriction",
+       "url": "https://d3fend.mitre.org/technique/d3f:OTVariableAccessRestriction/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-MAN",
+       "name": "Message Authentication",
+       "url": "https://d3fend.mitre.org/technique/d3f:MessageAuthentication/"
+      },
+      {
+       "id": "D3-MENCR",
+       "name": "Message Encryption",
+       "url": "https://d3fend.mitre.org/technique/d3f:MessageEncryption/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T0838",
+    "name": "Modify Alarm Settings",
+    "url": "https://attack.mitre.org/techniques/T0838/",
+    "domain": "ics",
+    "tactics": [
+     "inhibit-response-function"
+    ],
+    "platforms": [
+     "Embedded",
+     "Windows",
+     "Linux",
+     "Network Devices"
+    ],
+    "description": "Adversaries may modify alarm settings to prevent alerts that may inform operators of their presence or to prevent responses to dangerous and unintended scenarios. Reporting messages are a standard part of data acquisition in control systems. Reporting messages are used as a way to transmit system state information and acknowledgements that specific actions have occurred. These messages provide vital information for the management of a physical process, and keep operators, engineers, and administrators aware of the state of system devices and physical processes. If an adversary is able to change the reporting settings, certain events could be prevented from being reported. This type of modification can also prevent operators or devices from performing actions to keep the system in a safe state. If critical reporting messages cannot trigger these actions then a Impact could occur.",
+    "parent": null,
+    "used_by": 2,
+    "mitigations": [
+     {
+      "id": "M0800",
+      "name": "Authorization Enforcement",
+      "description": "The device or system should restrict read, manipulate, or execute privileges to only authenticated users who require access based on approved security policies. Role-based Access Control (RBAC) schemes can help reduce the overhead of assigning permissions to the large number of devices within an ICS.",
+      "url": "https://attack.mitre.org/mitigations/M0800/"
+     },
+     {
+      "id": "M0801",
+      "name": "Access Management",
+      "description": "Access Management technologies can be used to enforce authorization polices and decisions, especially when existing field devices do not provide sufficient capabilities to support user identification and authentication.",
+      "url": "https://attack.mitre.org/mitigations/M0801/"
+     },
+     {
+      "id": "M0804",
+      "name": "Human User Authentication",
+      "description": "Require user authentication before allowing access to data or accepting commands to a device. While strong multi-factor authentication is preferable, it is not always feasible within ICS environments.",
+      "url": "https://attack.mitre.org/mitigations/M0804/"
+     },
+     {
+      "id": "M0807",
+      "name": "Network Allowlists",
+      "description": "Network allowlists can be implemented through either host-based files or system hosts files to specify what connections (e.g., IP address, MAC address, port, protocol) can be made from a device. Allowlist techniques that operate at the application layer (e.g., DNP3, Modbus, HTTP) are addressed in Filter Network Traffic mitigation.",
+      "url": "https://attack.mitre.org/mitigations/M0807/"
+     },
+     {
+      "id": "M0813",
+      "name": "Software Process and Device Authentication",
+      "description": "Require the authentication of devices and software processes where appropriate. Devices that connect remotely to other systems should require strong authentication to prevent spoofing of communications. Furthermore, software processes should also require authentication when accessing APIs.",
+      "url": "https://attack.mitre.org/mitigations/M0813/"
+     },
+     {
+      "id": "M0918",
+      "name": "User Account Management",
+      "description": "Manage the creation, modification, use, and permissions associated to user accounts.",
+      "url": "https://attack.mitre.org/mitigations/M0918/"
+     },
+     {
+      "id": "M0930",
+      "name": "Network Segmentation",
+      "description": "Architect sections of the network to isolate critical systems, functions, or resources. Use physical and logical segmentation to prevent access to potentially sensitive systems and information. Use a DMZ to contain any internet-facing services that should not be exposed from the internal network. Restrict network access to only required systems and services.",
+      "url": "https://attack.mitre.org/mitigations/M0930/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0777",
+      "name": "Detection of Modify Alarm Settings",
+      "analytics": [
+       {
+        "platforms": [
+         "Network Devices"
+        ],
+        "description": "Real-time monitoring identifies Simple Network Management Protocol (SNMP) SET commands to alarm threshold Object Identifiers (OIDs) on Industrial Control System (ICS) network devices or process monitoring systems from a source not in the approved Network Management System (NMS) Classless Inter-Domain Routing (CIDR) subnet.",
+        "log_sources": [
+         "networkdevice:snmp"
+        ]
+       },
+       {
+        "platforms": [
+         "Linux"
+        ],
+        "description": "Real-time monitoring identifies a write to alarm threshold configuration files on a Linux-based alarm server by a User Identifier (UID) that is not the alarm management service.",
+        "log_sources": [
+         "auditd:SYSCALL+PATH"
+        ]
+       },
+       {
+        "platforms": [
+         "Embedded"
+        ],
+        "description": "Real-time monitoring identifies an Industrial Control System (ICS) protocol write specifically targeting alarm threshold/deadband configuration registers from a source not in the approved engineering list, where the new value widens the alarm deadband or shifts the trip point beyond the safe operating envelope, without operator acknowledgment.",
+        "log_sources": [
+         "NSM:Content",
+         "operationaldb:AlarmEvent"
+        ]
+       },
+       {
+        "platforms": [
+         "Windows"
+        ],
+        "description": "Real-time monitoring identifies a write to alarm threshold configuration on an Human-Machine Interface (HMI)/alarm server from a process other than the recognized alarm management application, without a corresponding operator session.",
+        "log_sources": [
+         "WinEventLog:Sysmon"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0777/"
+     }
+    ],
+    "d3fend": {
+     "Isolate": [
+      {
+       "id": "D3-NTF",
+       "name": "Network Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficFiltering/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-MAN",
+       "name": "Message Authentication",
+       "url": "https://d3fend.mitre.org/technique/d3f:MessageAuthentication/"
+      },
+      {
+       "id": "D3-MENCR",
+       "name": "Message Encryption",
+       "url": "https://d3fend.mitre.org/technique/d3f:MessageEncryption/"
+      }
+     ]
+    }
+   },
+   {
+    "id": "T0843.002",
+    "name": "Program Download: Online Edit",
+    "url": "https://attack.mitre.org/techniques/T0843/002/",
+    "domain": "ics",
+    "tactics": [
+     "lateral-movement"
+    ],
+    "platforms": [
+     "Embedded"
+    ],
+    "description": "Adversaries may execute an online edit of a PLC to update parts of an existing program. It does not require stopping the PLC which allows it to continue running during transfer and reconfiguration without interruption to process control. Adversaries may leverage this approach to minimize downtime and evade detection. The ability to perform an online edit to the PLC typically relies on access to a workstation with the vendor-specific PLC programming software installed.",
+    "parent": "T0843",
+    "used_by": 0,
+    "mitigations": [
+     {
+      "id": "M0800",
+      "name": "Authorization Enforcement",
+      "description": "The device or system should restrict read, manipulate, or execute privileges to only authenticated users who require access based on approved security policies. Role-based Access Control (RBAC) schemes can help reduce the overhead of assigning permissions to the large number of devices within an ICS.",
+      "url": "https://attack.mitre.org/mitigations/M0800/"
+     },
+     {
+      "id": "M0801",
+      "name": "Access Management",
+      "description": "Access Management technologies can be used to enforce authorization polices and decisions, especially when existing field devices do not provide sufficient capabilities to support user identification and authentication.",
+      "url": "https://attack.mitre.org/mitigations/M0801/"
+     },
+     {
+      "id": "M0802",
+      "name": "Communication Authenticity",
+      "description": "When communicating over an untrusted network, utilize secure network protocols that both authenticate the message sender and can verify its integrity. This can be done either through message authentication codes (MACs) or digital signatures, to detect spoofed network messages and unauthorized connections.",
+      "url": "https://attack.mitre.org/mitigations/M0802/"
+     },
+     {
+      "id": "M0804",
+      "name": "Human User Authentication",
+      "description": "Require user authentication before allowing access to data or accepting commands to a device. While strong multi-factor authentication is preferable, it is not always feasible within ICS environments.",
+      "url": "https://attack.mitre.org/mitigations/M0804/"
+     },
+     {
+      "id": "M0807",
+      "name": "Network Allowlists",
+      "description": "Network allowlists can be implemented through either host-based files or system hosts files to specify what connections (e.g., IP address, MAC address, port, protocol) can be made from a device. Allowlist techniques that operate at the application layer (e.g., DNP3, Modbus, HTTP) are addressed in Filter Network Traffic mitigation.",
+      "url": "https://attack.mitre.org/mitigations/M0807/"
+     },
+     {
+      "id": "M0813",
+      "name": "Software Process and Device Authentication",
+      "description": "Require the authentication of devices and software processes where appropriate. Devices that connect remotely to other systems should require strong authentication to prevent spoofing of communications. Furthermore, software processes should also require authentication when accessing APIs.",
+      "url": "https://attack.mitre.org/mitigations/M0813/"
+     },
+     {
+      "id": "M0930",
+      "name": "Network Segmentation",
+      "description": "Architect sections of the network to isolate critical systems, functions, or resources. Use physical and logical segmentation to prevent access to potentially sensitive systems and information. Use a DMZ to contain any internet-facing services that should not be exposed from the internal network. Restrict network access to only required systems and services.",
+      "url": "https://attack.mitre.org/mitigations/M0930/"
+     },
+     {
+      "id": "M0937",
+      "name": "Filter Network Traffic",
+      "description": "Use network appliances to filter ingress or egress traffic and perform protocol-based filtering. Configure software on endpoints to filter network traffic. Perform inline allow/denylisting of network messages based on the application layer (OSI Layer 7) protocol, especially for automation protocols.",
+      "url": "https://attack.mitre.org/mitigations/M0937/"
+     },
+     {
+      "id": "M0945",
+      "name": "Code Signing",
+      "description": "Enforce binary and application integrity with digital signature verification to prevent untrusted code from executing.",
+      "url": "https://attack.mitre.org/mitigations/M0945/"
+     },
+     {
+      "id": "M0947",
+      "name": "Audit",
+      "description": "Perform audits or scans of systems, permissions, insecure software, insecure configurations, etc. to identify potential weaknesses. Perform periodic integrity checks of the device to validate the correctness of the firmware, software, programs, and configurations.",
+      "url": "https://attack.mitre.org/mitigations/M0947/"
+     }
+    ],
+    "detections": [
+     {
+      "id": "DET0915",
+      "name": "Detection of Online Edit",
+      "analytics": [
+       {
+        "platforms": [
+         "Embedded"
+        ],
+        "description": "Real-time monitoring identifies an Industrial Control System (ICS) online-edit command sequence (incremental program modification while the device remains in RUN mode) from a source not in the approved engineering workstation list, outside a scheduled change-control window.",
+        "log_sources": [
+         "NSM:Content",
+         "engineeringworkstation:ApplicationLog"
+        ]
+       }
+      ],
+      "url": "https://attack.mitre.org/detectionstrategies/DET0915/"
+     }
+    ],
+    "d3fend": {
+     "Detect": [
+      {
+       "id": "D3-SBV",
+       "name": "Service Binary Verification",
+       "url": "https://d3fend.mitre.org/technique/d3f:ServiceBinaryVerification/"
+      }
+     ],
+     "Isolate": [
+      {
+       "id": "D3-NTF",
+       "name": "Network Traffic Filtering",
+       "url": "https://d3fend.mitre.org/technique/d3f:NetworkTrafficFiltering/"
+      }
+     ],
+     "Restore": [
+      {
+       "id": "D3-RS",
+       "name": "Restore Software",
+       "url": "https://d3fend.mitre.org/technique/d3f:RestoreSoftware/"
+      }
+     ],
+     "Harden": [
+      {
+       "id": "D3-MAN",
+       "name": "Message Authentication",
+       "url": "https://d3fend.mitre.org/technique/d3f:MessageAuthentication/"
+      },
+      {
+       "id": "D3-MENCR",
+       "name": "Message Encryption",
+       "url": "https://d3fend.mitre.org/technique/d3f:MessageEncryption/"
+      },
+      {
+       "id": "D3-SU",
+       "name": "Software Update",
+       "url": "https://d3fend.mitre.org/technique/d3f:SoftwareUpdate/"
+      }
+     ],
+     "Model": [
+      {
+       "id": "D3-AVE",
+       "name": "Asset Vulnerability Enumeration",
+       "url": "https://d3fend.mitre.org/technique/d3f:AssetVulnerabilityEnumeration/"
+      },
+      {
+       "id": "D3-SWI",
+       "name": "Software Inventory",
+       "url": "https://d3fend.mitre.org/technique/d3f:SoftwareInventory/"
+      }
+     ]
+    }
+   }
+  ],
+  "allowed_refs": [
+   "D3-AVE",
+   "D3-MAN",
+   "D3-MENCR",
+   "D3-NTF",
+   "D3-OVAR",
+   "D3-RS",
+   "D3-SBV",
+   "D3-SU",
+   "D3-SWI",
+   "DET0776",
+   "DET0777",
+   "DET0915",
+   "M0800",
+   "M0801",
+   "M0802",
+   "M0804",
+   "M0807",
+   "M0813",
+   "M0818",
+   "M0918",
+   "M0930",
+   "M0937",
+   "M0945",
+   "M0947",
+   "T0836",
+   "T0838",
+   "T0843",
+   "T0843.002"
+  ]
+ },
+ "playbook": {
+  "title": "Response Playbook for Unapproved PLC Parameter and Logic Modification (EWS-03 \u2192 PLC-07)",
+  "executive_summary": "An engineering workstation (EWS-03) wrote chlorine dosing setpoints 300% above limits, suppressed alarms, and downloaded a modified logic block to PLC-07 without authorization. Immediate containment, evidence preservation, and rollback are required to prevent over\u2011chlorination and environmental harm.",
+  "detection_and_analysis": [
+   {
+    "action": "Collect volatile memory and network captures from EWS-03 and PLC-07",
+    "detail": "Use forensic tools to image RAM and capture active Modbus/TCP sessions to preserve the malicious write commands and program download artifacts.",
+    "references": []
+   },
+   {
+    "action": "Query NSM:Content and engineeringworkstation:ApplicationLog for Modbus write events and online\u2011edit commands",
+    "detail": "Search for function code 16 writes to registers 40001\u201140010 and any DET0915\u2011identified online edit sequences originating from 10.50.2.13.",
+    "references": [
+     "DET0776",
+     "DET0915"
+    ]
+   },
+   {
+    "action": "Verify integrity of PLC\u201107 program and alarm configuration",
+    "detail": "Export the current PLC program and alarm threshold settings via vendor tools and compare against last known good baseline stored in version control.",
+    "references": []
+   }
+  ],
+  "containment": [
+   {
+    "action": "Isolate EWS-03 from the OT network",
+    "detail": "Place the workstation in a quarantine VLAN and disable its Modbus/TCP outbound rules using D3-NTF Network Traffic Filtering.",
+    "references": [
+     "D3-NTF"
+    ]
+   },
+   {
+    "action": "Switch PLC\u201107 to STOP mode and lock programming access",
+    "detail": "Use the vendor HMI to place the PLC in STOP, then enable write\u2011lock on program and parameter sections to prevent further changes.",
+    "references": [
+     "M0800",
+     "M0804"
+    ]
+   }
+  ],
+  "eradication": [
+   {
+    "action": "Revert PLC\u201107 to the last approved program version",
+    "detail": "Upload the validated backup of logic block OB1 and restore original alarm thresholds, then verify checksum matches baseline.",
+    "references": [
+     "D3-RS"
+    ]
+   },
+   {
+    "action": "Remove unauthorized user accounts or credentials on EWS-03",
+    "detail": "Audit local accounts, disable any that lack MFA, and enforce M0804 Human User Authentication.",
+    "references": [
+     "M0804"
+    ]
+   }
+  ],
+  "recovery": [
+   {
+    "action": "Return PLC\u201107 to RUN mode after successful validation",
+    "detail": "Perform functional tests of chlorine dosing setpoints within engineering limits and confirm HMI alarms trigger correctly.",
+    "references": []
+   },
+   {
+    "action": "Restore normal network connectivity for EWS-03 after remediation",
+    "detail": "Re\u2011enable approved firewall rules and confirm D3-OVAR OT Variable Access Restriction is applied.",
+    "references": [
+     "D3-OVAR"
+    ]
+   }
+  ],
+  "hardening": [
+   {
+    "action": "Enforce strict Modbus/TCP allowlists for engineering workstations",
+    "detail": "Configure M0807 Network Allowlists so only authorized IPs (e.g., approved workstations) can write to PLC\u201107 registers.",
+    "references": [
+     "M0807"
+    ]
+   },
+   {
+    "action": "Deploy message authentication and encryption for PLC communications",
+    "detail": "Implement D3-MAN Message Authentication and D3-MENCR Message Encryption on all PLC\u2011to\u2011workstation traffic.",
+    "references": [
+     "D3-MAN",
+     "D3-MENCR"
+    ]
+   },
+   {
+    "action": "Schedule periodic integrity scans of PLC programs and alarm settings",
+    "detail": "Use M0947 Audit to automatically compare live configurations against signed baselines.",
+    "references": [
+     "M0947"
+    ]
+   }
+  ],
+  "hunt_leads": [
+   {
+    "log_source": "NSM:Content",
+    "look_for": "Any Modbus/TCP function code 16 writes to registers 40001\u201140010 from non\u2011approved sources within the past 24\u202fh"
+   },
+   {
+    "log_source": "engineeringworkstation:ApplicationLog",
+    "look_for": "Online edit command sequences (DET0915) targeting PLC\u201107 from hosts other than the approved engineering list"
+   },
+   {
+    "log_source": "networkdevice:snmp",
+    "look_for": "SNMP SET commands altering alarm threshold OIDs on PLC\u201107 or related devices"
+   }
+  ]
+ },
+ "review": {
+  "verdict": "approve",
+  "issues": [],
+  "auto_issues": []
+ },
+ "status": "awaiting_analyst",
+ "saved_at": "2026-10-22"
+}

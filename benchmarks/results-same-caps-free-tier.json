@@ -1,0 +1,116 @@
+{
+ "summary": {
+  "date": "2026-10-22",
+  "alerts": 4,
+  "models": {
+   "triage": "qwen/qwen3.8-27b",
+   "mapper": "openai/gpt-oss-20b",
+   "writer": "openai/gpt-oss-120b",
+   "critic": "qwen/qwen3.8-27b"
+  },
+  "langgraph": {
+   "runs": 4,
+   "failures": 0,
+   "median_seconds": 11.975,
+   "mean_tokens": 10966,
+   "mean_llm_steps": 4.5,
+   "approved": 4,
+   "mean_references": 11.8
+  },
+  "crewai": {
+   "runs": 1,
+   "failures": 3,
+   "median_seconds": 57.69,
+   "mean_tokens": 16458,
+   "mean_llm_steps": 4,
+   "approved": 1,
+   "mean_references": 38
+  },
+  "mapping_jaccard": 1.0
+ },
+ "runs": [
+  {
+   "id": "ransomware-precursor",
+   "langgraph": {
+    "seconds": 13.29,
+    "tokens": 16161,
+    "llm_steps": 6,
+    "mapping": [
+     "T1486",
+     "T1490"
+    ],
+    "verdict": "approve",
+    "revisions": 1,
+    "references": 16
+   },
+   "crewai": {
+    "error": "ValidationError: 1 validation error for Mapping\n  Invalid JSON: EOF while parsing a list at line 12 column 5 [type=json_invalid, input_value='{\\n  \"matches\": [\\n    {...overyenabled No\"\\n    }', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+   }
+  },
+  {
+   "id": "scheduled-task-persistence",
+   "crewai": {
+    "error": "ValidationError: 1 validation error for Mapping\n  Invalid JSON: EOF while parsing a list at line 7 column 5 [type=json_invalid, input_value='{\\n  \"matches\": [\\n    {...n /ru SYSTEM /f\"\\n    }', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/json_invalid"
+   },
+   "langgraph": {
+    "seconds": 14.56,
+    "tokens": 9104,
+    "llm_steps": 4,
+    "mapping": [
+     "T1053.005",
+     "T1059.001"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 12
+   }
+  },
+  {
+   "id": "linux-webshell-cron",
+   "langgraph": {
+    "seconds": 7.35,
+    "tokens": 10182,
+    "llm_steps": 4,
+    "mapping": [
+     "T1053.003",
+     "T1059.004",
+     "T1105"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 8
+   },
+   "crewai": {
+    "seconds": 57.69,
+    "tokens": 16458,
+    "llm_steps": 4,
+    "llm_requests": 5,
+    "mapping": [
+     "T1053.003",
+     "T1105",
+     "T1059.004"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 38
+   }
+  },
+  {
+   "id": "lsass-access",
+   "crewai": {
+    "error": "ValueError: Invalid response from LLM call - None or empty."
+   },
+   "langgraph": {
+    "seconds": 10.66,
+    "tokens": 8417,
+    "llm_steps": 4,
+    "mapping": [
+     "T1003.001"
+    ],
+    "verdict": "approve",
+    "revisions": 0,
+    "references": 11
+   }
+  }
+ ]
+}
