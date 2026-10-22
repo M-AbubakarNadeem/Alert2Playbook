@@ -44,7 +44,7 @@ The result:
 - **Prompt-injection defence:** alerts are attacker-influenced text. Llama Prompt Guard 2 scores every alert, prompts fence the alert as data, and no agent has tools that act on systems.
 - **Per-agent model routing on Groq:** the strongest model writes, a different model family reviews, and on the free tier spreading the roles also spreads per-model quotas. Every call is a forced tool call validated by Pydantic, with a reply-length cap, a retry and a fallback-model ladder.
 - **Cost control for a public demo:** live runs and A2A calls need a demo code (`X-Demo-Code`, checked in constant time, guesses rate limited, announced in the Agent Card). Samples replay saved runs without spending anything.
-- **A self-explaining interface:** four tabs (Try it, How it works, How good is it, For developers). There is an alert builder, a drawer showing each step's real input and output, a map of every message between the parts with its real format, and results read straight from the result files.
+- **A self-explaining interface:** four tabs (Try it, How it works, Results, Developers), plain HTML, CSS and JavaScript with no framework. A looping hero animation replays a real saved run. There is an alert builder, a run timeline whose steps open a panel with their real input and output, an architecture diagram, every message between the parts with its real format, and charts read straight from the result files. It works on phones (bottom tab bar, bottom-sheet panel) and in light or dark.
 - **Interoperability:**
   - an **A2A v1.0** Agent Card and `SendMessage` JSON-RPC endpoint, so other agents can call it;
   - an **MCP** server with three tools (`lookup_technique`, `search_techniques`, `alert_to_playbook`) for Claude, Cursor and other MCP clients.

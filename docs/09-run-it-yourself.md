@@ -88,7 +88,7 @@ A2P_GUARD_MODEL=meta-llama/llama-prompt-guard-2-86m
 
 | You see | It means | Do this |
 |---|---|---|
-| "Live runs are locked" | The server has a demo code and the request had none (or a wrong one) | Click 🔒 at the top and enter the code, or open a sample to watch a saved run |
+| "Live runs are locked" | The server has a demo code and the request had none (or a wrong one) | Click the lock button at the top and enter the code, or choose a sample to watch a saved run |
 | "The AI provider is busy right now" | Groq's per-minute or daily limit was hit (common on a free key) | Wait a minute, or use a paid key |
 | Footer says "BM25 only" | No Pinecone key, or Pinecone failed | Add the key and run `scripts/index_pinecone.py` |
 | `GROQ_API_KEY is not set` | The server started without the key | Check `.env` or the Vercel settings |

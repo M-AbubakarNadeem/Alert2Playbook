@@ -17,11 +17,13 @@ Alert2Playbook/
 │   └── mcp_server.py        the MCP server with three tools
 ├── server.py                the FastAPI web API (Vercel runs it as one function)
 ├── public/                  the website (served by Vercel's CDN)
-│   ├── index.html           page skeleton: header, 4 tabs, footer, side drawer
-│   ├── app.css              the look: colours, spacing, cards (light and dark)
+│   ├── index.html           page skeleton: header, 4 tabs, footer, step panel, SVG icon set
+│   ├── app.css              the look: colours, type, spacing, animations, phone layout (light and dark)
 │   ├── content.js           all explanations: steps, parts, messages, glossary, alert-builder templates
-│   ├── app.js               the behaviour: tabs, alert picker and builder, unlock, live runs, replays, plan view
-│   └── results.json         measured numbers for the "How good is it" tab (made by scripts/export_results.py)
+│   ├── app.js               the behaviour: tabs, hero animation, alert picker and builder, unlock, live runs, replays, plan view, diagram, chart
+│   ├── favicon.svg          the browser-tab icon
+│   ├── og.png               the preview image shown when the link is shared
+│   └── results.json         measured numbers for the "Results" tab (made by scripts/export_results.py)
 ├── data/
 │   ├── kb.json.gz           the built knowledge graph (ATT&CK + D3FEND), 0.4 MB
 │   ├── samples.json         the 7 sample alerts on the page

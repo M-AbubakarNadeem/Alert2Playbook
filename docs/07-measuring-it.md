@@ -118,6 +118,6 @@ python eval/tune_retrieval.py          # compare search settings offline, no LLM
 
 A full run uses about 100,000 Groq tokens: a few US cents on a paid key. On the free tier (200,000 tokens per model per day) run it at most once a day.
 
-After any new run, `python scripts/export_results.py` copies the numbers into `public/results.json`, which feeds the website's "How good is it" tab. The website never shows a number that is not in a results file.
+After any new run, `python scripts/export_results.py` copies the numbers into `public/results.json`, which feeds the website's "Results" tab. The website never shows a number that is not in a results file.
 
 Next: [Talking to other programs](08-talking-to-other-agents.md)

@@ -8,17 +8,19 @@ Four small files in `public/`, no build step and no framework:
 
 | File | What it holds |
 |---|---|
-| `index.html` | the page skeleton: header, four tabs, footer, the side drawer |
-| `app.css` | the look: colours (light and dark), spacing, cards, steps |
+| `index.html` | the page skeleton: header, four tabs, footer, the step panel, and the icon set (hand-drawn SVG symbols) |
+| `app.css` | the look: colours (light and dark), type, spacing, animations, and the phone layout |
 | `content.js` | every explanation on the page: the 8 steps, the parts, the messages, the glossary, the alert-builder templates |
-| `app.js` | the behaviour: tabs, picking alerts, the alert builder, unlocking, live runs, replays, the step drawer, the plan view |
+| `app.js` | the behaviour: tabs, the hero animation, picking alerts, the alert builder, unlocking, live runs, replays, the step panel, the plan view, the diagram and the chart |
 
 The four tabs:
 
-- **Try it:** 1 pick an alert (or build your own), 2 start, 3 watch 8 boxes light up (click any box to see exactly what went in and came out), 4 read the plan, then approve, ask for changes or download.
-- **How it works:** the parts of the system, the 7 messages between them with their real formats, and one alert followed through every step with real data.
-- **How good is it:** the measured results, read from `public/results.json` (made by `scripts/export_results.py`).
-- **For developers:** the API, A2A and MCP, with copy-paste examples.
+- **Try it:** a short animation replays a real saved run. Then 1 choose an alert (or build your own) and press Start, 2 watch the 8 steps tick off in a timeline (click any step to see exactly what went in and came out), 3 read the plan, then approve, ask for changes or download.
+- **How it works:** a diagram of the parts of the system, the 7 messages between them with their real formats, and one alert followed through every step with real data.
+- **Results:** the measured results as charts, read from `public/results.json` (made by `scripts/export_results.py`).
+- **Developers:** the API, A2A and MCP, with copy-paste examples.
+
+On a phone the tabs move to a bar at the bottom of the screen, and a step's details open as a sheet that slides up (drag it down to close).
 
 ## 2. The web API
 
