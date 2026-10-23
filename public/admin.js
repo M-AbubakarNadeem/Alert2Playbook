@@ -121,6 +121,8 @@
     const providers = [...new Set(data.runs.map((r) => r.provider_label || r.provider).filter(Boolean))].sort();
     const current = $("#f-provider").value;
     $("#f-provider").innerHTML = `<option value="">All providers</option>` + providers.map((p) => `<option${p === current ? " selected" : ""}>${esc(p)}</option>`).join("");
+    const present = new Set(data.runs.map((r) => r.id));
+    for (const id of [...selected]) if (!present.has(id)) selected.delete(id);
     renderTable();
   }
 
@@ -137,13 +139,20 @@
     });
   }
 
+  /* Entries ticked for deletion, by id. Kept across filter changes, cleared on reload. */
+  const selected = new Set();
+  let confirming = false;
+
   function renderTable() {
     const rows = filtered();
     const what = (r) => r.kind === "check" ? "Key check" : r.kind === "feedback" ? "Change request" : r.entry === "a2a" ? "Run (A2A)" : "Run";
+    const allOn = rows.length > 0 && rows.every((r) => selected.has(r.id));
     $("#runs").innerHTML = `<thead><tr>
+        <th class="pick"><input type="checkbox" id="pick-all" aria-label="Select every entry shown"${allOn ? " checked" : ""}></th>
         <th>When</th><th>Name</th><th>Provider and model</th><th>Key</th><th>What</th><th>Result</th>
         <th>Techniques</th><th class="num">Tokens</th><th class="num">Time</th><th>Where</th><th>Browser</th>
-      </tr></thead><tbody>${rows.map((r) => `<tr>
+      </tr></thead><tbody>${rows.map((r) => `<tr${selected.has(r.id) ? ' class="sel"' : ""}>
+        <td class="pick"><input type="checkbox" data-id="${esc(r.id)}" aria-label="Select this entry"${selected.has(r.id) ? " checked" : ""}></td>
         <td class="nowrap">${when(r.ts)}</td>
         <td><b>${esc(r.name || "–")}</b></td>
         <td><span class="nowrap">${esc(r.provider_label || r.provider || "–")}</span>${r.model ? `<span class="sub mono">${esc(r.model)}</span>` : ""}</td>
@@ -157,6 +166,64 @@
         <td class="nowrap">${esc(r.browser || "–")}</td>
       </tr>`).join("")}</tbody>`;
     $("#count").textContent = rows.length ? `Showing ${num(rows.length)} of ${num(data.runs.length)}.` : "Nothing matches.";
+
+    $("#pick-all").onchange = (e) => {
+      for (const r of rows) e.target.checked ? selected.add(r.id) : selected.delete(r.id);
+      confirming = false;
+      renderTable();
+    };
+    for (const box of $("#runs").querySelectorAll("input[data-id]")) {
+      box.onchange = () => {
+        box.checked ? selected.add(box.dataset.id) : selected.delete(box.dataset.id);
+        box.closest("tr").classList.toggle("sel", box.checked);
+        $("#pick-all").checked = rows.length > 0 && rows.every((r) => selected.has(r.id));
+        confirming = false;
+        renderSelbar();
+      };
+    }
+    renderSelbar();
+  }
+
+  function renderSelbar() {
+    const bar = $("#selbar"), n = selected.size;
+    bar.hidden = n === 0;
+    bar.classList.toggle("confirm", confirming);
+    if (!n) { bar.innerHTML = ""; return; }
+    const label = `${num(n)} entr${n === 1 ? "y" : "ies"}`;
+    bar.innerHTML = confirming
+      ? `${icon("warn")}<span>Delete <b>${label}</b> for good? This can't be undone.</span><span class="spacer"></span>
+         <button class="btn sm danger" id="del-yes" type="button">${icon("trash")}Yes, delete</button>
+         <button class="btn sm" id="del-no" type="button">Keep them</button>`
+      : `<span><b>${label}</b> selected</span><span class="spacer"></span>
+         <button class="btn sm" id="del" type="button">${icon("trash")}Delete</button>
+         <button class="link-btn" id="del-clear" type="button">Clear selection</button>`;
+    if (confirming) {
+      $("#del-yes").onclick = deleteSelected;
+      $("#del-no").onclick = () => { confirming = false; renderSelbar(); };
+      $("#del-no").focus();
+    } else {
+      $("#del").onclick = () => { confirming = true; renderSelbar(); };
+      $("#del-clear").onclick = () => { selected.clear(); renderTable(); };
+    }
+  }
+
+  async function deleteSelected() {
+    const btn = $("#del-yes");
+    btn.disabled = true;
+    try {
+      const r = await fetch("/api/admin/runs/delete", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ ids: [...selected] }) });
+      if (r.status === 401) { show("signin"); return; }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        $("#selbar").innerHTML = `${icon("warn")}<span>${esc(typeof d.detail === "string" ? d.detail : "Couldn't delete them.")}</span>`;
+        return;
+      }
+      selected.clear(); confirming = false;
+      await load();
+      $("#count").textContent = `Deleted ${num(d.deleted)}. ` + $("#count").textContent;
+    } catch {
+      $("#selbar").innerHTML = `${icon("warn")}<span>Couldn't reach the server.</span>`;
+    }
   }
   for (const id of ["#q", "#f-provider", "#f-kind", "#f-mine"]) $(id).addEventListener("input", () => data && renderTable());
 

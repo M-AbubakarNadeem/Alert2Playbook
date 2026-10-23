@@ -217,3 +217,20 @@ def test_login_from_another_site_is_refused(client):
 def test_a_forged_cookie_is_refused(client):
     client.cookies.set(admin.COOKIE, "YWJ1YmFrYXJ8OTk5OTk5OTk5OXxhYmM.forged", path="/api/admin")
     assert client.get("/api/admin/overview").status_code == 401
+
+
+def test_deleting_entries_needs_a_login_and_removes_only_those(client):
+    for _ in range(3):
+        client.post("/api/run", json={"alert": ALERT, "visitor": VISITOR}, headers={"X-LLM-Key": GROQ_KEY})
+    ids = [r["id"] for r in get_store().recent_runs()]
+    assert len(ids) == 3
+    assert client.post("/api/admin/runs/delete", json={"ids": ids[:1]}).status_code == 401
+    login(client)
+    assert client.post("/api/admin/runs/delete", json={"ids": ids[:1]}, headers={"Origin": "https://evil.example"}).status_code == 403
+    assert client.post("/api/admin/runs/delete", json={"ids": ["not-an-id"]}).status_code == 400
+    r = client.post("/api/admin/runs/delete", json={"ids": ids[:2]})
+    assert r.status_code == 200 and r.json() == {"deleted": 2}
+    left = client.get("/api/admin/overview").json()
+    assert [x["id"] for x in left["runs"]] == ids[2:]
+    assert left["totals"]["visitor_runs"] == 1
+    assert client.post("/api/admin/runs/delete", json={"ids": ids[:1]}).json() == {"deleted": 0}  # already gone

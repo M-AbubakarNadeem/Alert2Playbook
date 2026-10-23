@@ -79,6 +79,16 @@
 .runs tbody tr { transition: background .15s ease; }
 @media (hover: hover) and (pointer: fine) { .runs tbody tr:hover { background: var(--surface-2); } }
 #count { margin: 12px 0 0; }
+.runs th.pick, .runs td.pick { width: 36px; padding-right: 0; }
+.runs input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
+.runs tr.sel { background: var(--accent-soft); }
+.selbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin: 0 0 12px; padding: 10px 14px; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid var(--line); font-size: 13.5px; animation: fade-up .25s var(--ease-out); }
+.selbar.confirm { background: var(--danger-soft); border-color: var(--danger-line); color: var(--danger); }
+.selbar b { font-weight: 600; color: var(--ink); }
+.selbar.confirm b { color: var(--danger); }
+.selbar .spacer { flex: 1; }
+.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+@media (hover: hover) and (pointer: fine) { .btn.danger:hover:not(:disabled) { background: var(--danger); border-color: var(--danger); filter: brightness(1.08); } }
 
 @media (max-width: 1080px) {
   .admin .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }

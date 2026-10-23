@@ -16,6 +16,7 @@ Python function; the page in public/ is served from Vercel's CDN.
     POST /api/admin/logout
     GET  /api/admin/me
     GET  /api/admin/overview                          run log and usage numbers                       [admin cookie]
+    POST /api/admin/runs/delete {ids}                 remove entries from the run log                 [admin cookie]
 
 [access] is one of:
   - the owner's demo code in the X-Demo-Code header (runs on the owner's Groq key), or
@@ -333,6 +334,10 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=200)
 
 
+class DeleteRunsRequest(BaseModel):
+    ids: list[str] = Field(min_length=1, max_length=500)
+
+
 @app.get("/api/health")
 def health():
     kb = get_kb()
@@ -526,6 +531,20 @@ def admin_logout(request: Request, response: Response):
 @app.get("/api/admin/me")
 def admin_me(request: Request):
     return {"user": require_admin(request)}
+
+
+_RUN_ID = re.compile(r"^[0-9a-f]{12}$")
+
+
+@app.post("/api/admin/runs/delete")
+def admin_delete_runs(body: DeleteRunsRequest, request: Request):
+    """Removes entries from the run log, for example the owner's own test runs."""
+    same_origin(request)
+    require_admin(request)
+    ids = {i for i in body.ids if _RUN_ID.fullmatch(i)}
+    if len(ids) != len(set(body.ids)):
+        raise HTTPException(400, "Those don't look like entry ids.")
+    return {"deleted": get_store().delete_runs(ids)}
 
 
 @app.get("/api/admin/overview")
