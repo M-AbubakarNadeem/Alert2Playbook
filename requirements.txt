@@ -1,4 +1,4 @@
-# Runtime dependencies of the Vercel function (api/index.py).
+# Runtime dependencies of the Vercel function (server.py).
 fastapi==0.156.4
 langgraph==1.2.16
 langchain-core==1.6.12
@@ -7,3 +7,4 @@ groq==0.37.1
 pinecone==10.1.0
 pydantic==2.14.1
 langsmith==0.14.11
+httpx==0.28.1

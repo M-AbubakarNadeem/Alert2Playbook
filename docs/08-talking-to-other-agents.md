@@ -26,16 +26,23 @@ On a phone the tabs move to a bar at the bottom of the screen, and a step's deta
 
 Built with FastAPI in `server.py`. Interactive docs are at `/api/docs` on the live site.
 
-| Method | Path | Body | Returns | Needs code? |
+| Method | Path | Body | Returns | Access |
 |---|---|---|---|---|
-| GET | `/api/health` | none | ATT&CK versions, technique count, models in use, search mode, whether live runs are locked | no |
-| GET | `/api/samples` | none | the sample alerts, each with its saved run | no |
-| POST | `/api/unlock` | `{"code": "..."}` | `{"ok": true}`, or 401 if wrong (10 tries per 10 minutes) | no |
-| POST | `/api/run` | `{"alert": "..."}` | live updates (server-sent events), then the final state | yes |
-| POST | `/api/feedback` | `{"state": {...}, "feedback": "..."}` | live updates for the revision | yes |
-| POST | `/api/markdown` | `{"state": {...}}` | the playbook as Markdown text | no |
+| GET | `/api/health` | none | ATT&CK versions, technique count, models in use, search mode, whether live runs are locked | open |
+| GET | `/api/samples` | none | the sample alerts, each with its saved run | open |
+| GET | `/api/providers` | none | the providers you can bring a key for (id, name, free tier or not, where to get a key) | open |
+| POST | `/api/keys/check` | `{"name", "provider"}` + `X-LLM-Key` | `{"ok": true, "models": [...], "default": "...", "masked": "gsk_••••a1b2"}`, or 401 if the provider refuses the key | open, 20 per hour |
+| POST | `/api/unlock` | `{"code": "..."}` | `{"ok": true}`, or 401 if wrong (10 tries per 10 minutes) | open |
+| POST | `/api/run` | `{"alert": "...", "visitor": {"name", "provider", "model"}}` | live updates (server-sent events), then the final state | your key or the demo code |
+| POST | `/api/feedback` | `{"state": {...}, "feedback": "...", "visitor": {...}}` | live updates for the revision | your key or the demo code |
+| POST | `/api/markdown` | `{"state": {...}}` | the playbook as Markdown text | open |
 
-"Needs code" means the request must carry the demo code in the `X-Demo-Code` header, because live runs spend the owner's paid AI credit (page 6). If the server has no `A2P_DEMO_CODE` set (for example when you run your own copy), nothing is locked.
+A live run is paid for one of two ways:
+
+- **Your own key.** Put your model key in the `X-LLM-Key` header and your name, provider and model in `visitor`. The server checks the key with that provider, uses it for this one run and then drops it. Page 12 explains exactly what happens to it. Limits: 10 runs per hour per visitor, 20 per hour per key, 300 per day for the whole site.
+- **The owner's demo code** in the `X-Demo-Code` header. That runs on the owner's Groq key and per-agent models.
+
+If the server has no `A2P_DEMO_CODE` set (for example when you run your own copy), nothing is locked and runs use `GROQ_API_KEY`.
 
 ### Reading the live updates
 
@@ -56,17 +63,18 @@ Try it from a terminal:
 ```bash
 curl -N -X POST https://YOUR-DEPLOYMENT/api/run \
   -H "Content-Type: application/json" \
-  -H "X-Demo-Code: YOUR_DEMO_CODE" \
-  -d '{"alert": "Sysmon EID 1 on WS-01: schtasks /create /tn upd /tr powershell.exe /sc onlogon /ru SYSTEM"}'
+  -H "X-LLM-Key: YOUR_GROQ_KEY" \
+  -d '{"alert": "Sysmon EID 1 on WS-01: schtasks /create /tn upd /tr powershell.exe /sc onlogon /ru SYSTEM",
+       "visitor": {"name": "Your Name", "provider": "groq", "model": "openai/gpt-oss-120b"}}'
 ```
 
 ## 3. A2A: letting other AI agents hire it
 
 **A2A (Agent2Agent)** is an open protocol, now at version 1.0, for agents built by different teams to discover and call each other. We implement the smallest useful part of it in `alert2playbook/a2a.py`.
 
-**Discovery.** Any agent can read our **Agent Card** at `/.well-known/agent-card.json`. It says who we are, what skill we offer (`alert-to-playbook`), what we accept (`text/plain`), what we return (`text/markdown`, `application/json`), and where to call us (the `JSONRPC` interface at `/a2a`). On the public site it also says that a key is needed: a security scheme named `demoCode`, of type API key, sent in the `X-Demo-Code` header.
+**Discovery.** Any agent can read our **Agent Card** at `/.well-known/agent-card.json`. It says who we are, what skill we offer (`alert-to-playbook`), what we accept (`text/plain`), what we return (`text/markdown`, `application/json`), and where to call us (the `JSONRPC` interface at `/a2a`). On the public site it also lists two ways in, either of which is enough: `demoCode` (the owner's code in `X-Demo-Code`) and `ownKey` (your model key in `X-LLM-Key`).
 
-**Calling.** Send a JSON-RPC 2.0 request with the method `SendMessage` (and the `X-Demo-Code` header on the public site):
+**Calling.** Send a JSON-RPC 2.0 request with the method `SendMessage`. With your own key, add four headers: `X-LLM-Key`, `X-LLM-Provider` (an id from `/api/providers`), `X-LLM-Model` and `X-Visitor-Name` (URL-encoded, so `Sara%20Khan`).
 
 ```json
 {

@@ -15,5 +15,6 @@ These pages explain the whole project in plain words. You do not need to know an
 | 9 | [Run it yourself](09-run-it-yourself.md) | Install, add keys, test, run locally, deploy for free |
 | 10 | [Map of the code](10-code-map.md) | Every file and folder, and what it is for |
 | 11 | [Why we built it this way](11-decisions.md) | The choices we made and what we gave up |
+| 12 | [Your own key and the dashboard](12-your-own-key.md) | How visitors run it with their own key, what happens to that key, and what the owner sees |
 
 If you only have two minutes, read page 1 and look at the picture on page 3.
