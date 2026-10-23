@@ -16,6 +16,7 @@ PROTOCOL_VERSION = "1.0"
 
 
 DEMO_CODE_HEADER = "X-Demo-Code"
+OWN_KEY_HEADER = "X-LLM-Key"
 
 
 def agent_card(base_url: str, version: str, locked: bool = False) -> dict:
@@ -48,17 +49,29 @@ def agent_card(base_url: str, version: str, locked: bool = False) -> dict:
         ],
     }
     if locked:
-        # Live runs spend the owner's LLM credit, so callers must send the demo code.
+        # A run is paid for either by the owner (demo code) or by the caller's own model
+        # key. The two requirements are alternatives: either one is enough.
         card["securitySchemes"] = {
             "demoCode": {
                 "apiKeySecurityScheme": {
-                    "description": "Demo code issued by the owner; required for live runs.",
+                    "description": "Demo code issued by the owner. Runs on the owner's Groq key.",
                     "location": "header",
                     "name": DEMO_CODE_HEADER,
                 }
-            }
+            },
+            "ownKey": {
+                "apiKeySecurityScheme": {
+                    "description": (
+                        "Your own model API key. Also send X-LLM-Provider (a provider id from GET /api/providers), "
+                        "X-LLM-Model and X-Visitor-Name. The key is checked with its provider, used for this one "
+                        "call and never stored."
+                    ),
+                    "location": "header",
+                    "name": OWN_KEY_HEADER,
+                }
+            },
         }
-        card["securityRequirements"] = [{"schemes": {"demoCode": {"list": []}}}]
+        card["securityRequirements"] = [{"schemes": {"demoCode": {"list": []}}}, {"schemes": {"ownKey": {"list": []}}}]
     return card
 
 

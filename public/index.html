@@ -65,6 +65,8 @@
     <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/></symbol>
     <symbol id="i-hash" viewBox="0 0 24 24"><path d="M5 9h14M5 15h14M10 4 8 20M16 4l-2 16"/></symbol>
     <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="m7 9.5 3 2.5-3 2.5M12.5 15h4.5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.6c.5-.1.9-.1 1.4-.1 6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 6.6A16.7 16.7 0 0 0 2.5 12s3.5 6.5 9.5 6.5c1.6 0 3-.4 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
     <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.3 8.2-8.2M16 7l2.5 2.5M13.5 9.5l2 2"/></symbol>
     <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.5 18.5h9.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 9.6a4.5 4.5 0 0 0 .5 8.9z"/></symbol>
     <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3.5 20.5v-10l5 3v-3l5 3v-3l5 3V4h2.5v16.5z"/><path d="M7 17h2M12 17h2"/></symbol>
@@ -122,12 +124,11 @@
       <div class="hero-bg" aria-hidden="true"></div>
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow reveal-in" style="--d:0">Agentic AI for security operations</p>
           <h1 class="display">
             <span class="line"><span class="reveal-up" style="--d:1">Security alert in.</span></span>
             <span class="line"><span class="reveal-up soft" style="--d:2">Response plan out.</span></span>
           </h1>
-          <p class="hero-lead reveal-in" style="--d:3">Paste a raw alert from any security tool. A team of AI agents works through it in eight steps: it explains what happened, matches it to MITRE ATT&amp;CK, and writes a response plan built only from official defence guidance. A person approves every plan.</p>
+          <p class="hero-lead reveal-in" style="--d:3">Paste in a raw alert from any security tool. A small team of AI agents works through it in eight steps. They figure out what happened, match it to MITRE ATT&amp;CK and write a response plan using only official defence guidance. Nothing happens until a person signs off.</p>
           <div class="hero-cta reveal-in" style="--d:4">
             <a class="btn primary lg" href="#choose" id="cta-try"><svg class="i"><use href="#i-play"/></svg>Try a sample alert</a>
             <a class="btn quiet lg" href="#how">See how it works<svg class="i"><use href="#i-arrow-right"/></svg></a>
@@ -162,8 +163,7 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
     <div class="wrap">
       <section class="block" id="choose" aria-labelledby="h-choose">
         <header class="block-head reveal">
-          <span class="idx">01</span>
-          <div><h2 id="h-choose">Choose an alert</h2><p>Seven sample alerts come with saved runs that anyone can replay. Or build your own from a short form.</p></div>
+          <div><h2 id="h-choose">Choose an alert</h2><p>Seven sample alerts come with saved runs anyone can replay. Or build your own from a short form.</p></div>
         </header>
 
         <div class="bench reveal">
@@ -183,24 +183,61 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
               <div class="editor-foot">
                 <button class="btn primary" id="start" type="button" disabled><svg class="i"><use href="#i-play"/></svg><span>Start the agents</span></button>
                 <p class="start-note" id="start-note">Choose an alert first.</p>
-              </div>
-              <div class="code-area" id="code-area" hidden>
-                <label class="field-label" for="code">Demo code</label>
-                <div class="code-row">
-                  <input id="code" type="password" autocomplete="off" placeholder="word-word-0000">
-                  <button class="btn" id="code-go" type="button"><svg class="i"><use href="#i-unlock"/></svg>Unlock</button>
-                </div>
-                <div id="code-msg" aria-live="polite"></div>
+                <button class="link-btn" id="replay" type="button" hidden>Watch the saved run instead</button>
               </div>
             </div>
+
+            <section class="live" id="live" aria-labelledby="h-live">
+              <div class="live-head">
+                <span class="live-ico"><svg class="i"><use href="#i-key"/></svg></span>
+                <div>
+                  <h3 id="h-live">Run it live with your own key</h3>
+                  <p>Any provider on the list works, and free keys are fine. Groq, Google Gemini, OpenRouter, Cerebras, Mistral and Cohere all have free tiers.</p>
+                </div>
+              </div>
+
+              <form class="live-form" id="key-form" autocomplete="off" novalidate>
+                <label class="field">Your name
+                  <input id="v-name" maxlength="60" autocomplete="name" placeholder="Sara Khan">
+                </label>
+                <label class="field">Provider
+                  <select id="v-provider"></select>
+                </label>
+                <label class="field wide">API key
+                  <span class="key-input">
+                    <input id="v-key" type="password" spellcheck="false" autocomplete="off" placeholder="Paste your key here">
+                    <button type="button" class="eye" id="v-eye" aria-label="Show the key" aria-pressed="false"><svg class="i"><use href="#i-eye"/></svg></button>
+                  </span>
+                  <span class="hint" id="v-get"></span>
+                </label>
+                <div class="live-actions wide">
+                  <button class="btn" id="v-check" type="submit"><svg class="i"><use href="#i-check-circle"/></svg><span>Check my key</span></button>
+                  <div id="v-msg" aria-live="polite"></div>
+                </div>
+              </form>
+
+              <div class="live-ready" id="live-ready" hidden></div>
+
+              <p class="privacy"><svg class="i"><use href="#i-lock"/></svg><span>Your key is only used for your runs and is never saved. I keep your name, the provider, the model and a masked copy of the key (like gsk_••••a1b2) so I can see which providers people use.</span></p>
+
+              <div class="owner">
+                <button class="link-btn" id="show-code" type="button" aria-expanded="false">I have the demo code</button>
+                <div class="code-area" id="code-area" hidden>
+                  <div class="code-row">
+                    <input id="code" type="password" autocomplete="off" placeholder="Demo code" aria-label="Demo code">
+                    <button class="btn" id="code-go" type="button"><svg class="i"><use href="#i-unlock"/></svg>Unlock</button>
+                  </div>
+                  <div id="code-msg" aria-live="polite"></div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </section>
 
       <section class="block" id="watch" aria-labelledby="h-watch">
         <header class="block-head reveal">
-          <span class="idx">02</span>
-          <div><h2 id="h-watch">Watch the agents work</h2><p>Each step reports back the moment it finishes. Open any step to see exactly what went in, what came out, and which model did the work.</p></div>
+          <div><h2 id="h-watch">Watch the agents work</h2><p>Each step reports back the moment it's done. Open any step to see what went in, what came out and which model did the work.</p></div>
         </header>
         <div class="run reveal">
           <div class="run-progress" aria-hidden="true"><span id="run-progress"></span></div>
@@ -211,8 +248,7 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
 
       <section class="block" id="plan" aria-labelledby="h-plan">
         <header class="block-head reveal">
-          <span class="idx">03</span>
-          <div><h2 id="h-plan">Review the plan</h2><p>Nothing touches a computer automatically. The plan waits here for a person to approve it, change it, or download it.</p></div>
+          <div><h2 id="h-plan">Review the plan</h2><p>Nothing touches a computer on its own. The plan sits here until a person approves it, changes it or downloads it.</p></div>
         </header>
         <div class="result reveal" id="result" aria-live="polite"></div>
       </section>
@@ -223,13 +259,12 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
   <section class="panel" id="panel-how" role="tabpanel" aria-labelledby="tab-how">
     <div class="wrap">
       <header class="page-head">
-        <p class="eyebrow">How it works</p>
-        <h1>Eight steps, four models,<br>one knowledge graph.</h1>
-        <p class="page-lead">Every part of the system, what it does, and the exact messages that travel between the parts. Click any part or message to see more.</p>
+        <h1>What happens when you press Start</h1>
+        <p class="page-lead">Here's every part of the system and the exact messages they send each other. Click a part or a message to see more.</p>
       </header>
 
       <section class="block" aria-labelledby="h-arch">
-        <header class="block-head reveal"><span class="idx">01</span><div><h2 id="h-arch">The system</h2><p>Your browser talks to one Python server. The server calls three outside services and keeps the knowledge graph in memory.</p></div></header>
+        <header class="block-head reveal"><div><h2 id="h-arch">The system</h2><p>Your browser talks to one Python server. That server calls three outside services and keeps the knowledge graph in memory.</p></div></header>
         <div class="arch-wrap reveal">
           <div class="arch" id="map">
             <svg class="arch-lines" id="arch-lines" aria-hidden="true"></svg>
@@ -239,7 +274,7 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
       </section>
 
       <section class="block" aria-labelledby="h-msg">
-        <header class="block-head reveal"><span class="idx">02</span><div><h2 id="h-msg">The messages, in order</h2><p>What travels between the parts when you press Start, with the real format of each message.</p></div></header>
+        <header class="block-head reveal"><div><h2 id="h-msg">The messages, in order</h2><p>What travels between the parts when you press Start, and the real format of each one.</p></div></header>
         <div class="msgs reveal">
           <div class="msg-list" id="messages"></div>
           <div class="msg-detail" id="message-detail" aria-live="polite"></div>
@@ -247,17 +282,17 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
       </section>
 
       <section class="block" aria-labelledby="h-story">
-        <header class="block-head reveal"><span class="idx">03</span><div><h2 id="h-story">One alert, step by step</h2><p>The “Backups wiped” sample followed through all eight steps, with the real data from a saved run.</p></div></header>
+        <header class="block-head reveal"><div><h2 id="h-story">One alert, step by step</h2><p>The “Backups wiped” sample, followed through all eight steps using the real data from a saved run.</p></div></header>
         <ol class="story" id="story"><li class="skeleton"></li></ol>
       </section>
 
       <section class="block" aria-labelledby="h-trust">
-        <header class="block-head reveal"><span class="idx">04</span><div><h2 id="h-trust">Why the output can be trusted</h2><p>Six guards, most of them plain code rather than AI.</p></div></header>
+        <header class="block-head reveal"><div><h2 id="h-trust">Why you can trust the output</h2><p>Six checks. Most of them are plain code, not AI.</p></div></header>
         <div class="trust reveal" id="trust"></div>
       </section>
 
       <section class="block" aria-labelledby="h-gloss">
-        <header class="block-head reveal"><span class="idx">05</span><div><h2 id="h-gloss">Words used on this site</h2></div></header>
+        <header class="block-head reveal"><div><h2 id="h-gloss">Words used on this site</h2></div></header>
         <dl class="gloss reveal" id="glossary"></dl>
       </section>
     </div>
@@ -267,9 +302,8 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
   <section class="panel" id="panel-good" role="tabpanel" aria-labelledby="tab-good">
     <div class="wrap">
       <header class="page-head">
-        <p class="eyebrow">Results</p>
-        <h1>Measured, not promised.</h1>
-        <p class="page-lead">Tested on alerts with known answers, and compared with the same system built in another framework. The weak spots are included.</p>
+        <h1>Does it actually work?</h1>
+        <p class="page-lead">I tested it on alerts where I already knew the right answer, then rebuilt the whole thing in a second framework to compare. The weak spots are in here too.</p>
       </header>
       <div id="good"><div class="skeleton"></div><div class="skeleton"></div></div>
     </div>
@@ -279,9 +313,8 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
   <section class="panel" id="panel-dev" role="tabpanel" aria-labelledby="tab-dev">
     <div class="wrap">
       <header class="page-head">
-        <p class="eyebrow">Developers</p>
-        <h1>Call it from anywhere.</h1>
-        <p class="page-lead">From your own code over HTTP, from another AI agent over A2A, or from an AI assistant like Claude over MCP.</p>
+        <h1>Use it from your own code</h1>
+        <p class="page-lead">Over plain HTTP, from another AI agent over A2A, or from an assistant like Claude over MCP.</p>
       </header>
       <div id="dev"></div>
     </div>
@@ -316,7 +349,7 @@ bcdedit.exe /set {default} recoveryenabled No</pre>
   <div class="drawer-grip" aria-hidden="true"></div>
   <header class="drawer-head">
     <span class="drawer-ico" id="drawer-ico" aria-hidden="true"></span>
-    <div class="spacer"><p class="mono xs muted" id="drawer-kicker"></p><h3 id="drawer-title"></h3></div>
+    <div class="spacer"><h3 id="drawer-title"></h3></div>
     <button class="icon-btn" id="drawer-close" type="button" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
   </header>
   <div class="drawer-body" id="drawer-body"></div>

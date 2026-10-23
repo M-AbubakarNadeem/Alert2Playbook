@@ -13,7 +13,7 @@ There are two kinds of tests:
 pytest
 ```
 
-19 tests, about 4 seconds, no keys needed. They use the real knowledge graph and search, plus a scripted fake AI that returns answers we choose. They check that:
+74 tests, about 15 seconds, no keys needed. They use the real knowledge graph and search, plus a scripted fake AI and fake provider replies that return answers we choose. They check that:
 
 - the knowledge graph covers Enterprise and ICS, and old revoked IDs lead to their replacements;
 - search finds the right technique from a behaviour description, and IDs written in the alert or exact technique names come first;
@@ -24,7 +24,9 @@ pytest
 - analyst feedback re-enters the graph at the writer and is kept in the history;
 - the MCP server starts and its tools answer, exactly as an MCP client would see them;
 - error messages shown to visitors or saved to results files have account IDs and key-shaped strings removed;
-- the demo-code lock: live runs and A2A calls are refused without the right code, wrong codes are refused, guessing is rate limited, and the Agent Card announces that a code is needed.
+- the demo-code lock: live runs and A2A calls are refused without the right code or a visitor key, wrong codes are refused, guessing is rate limited, and the Agent Card lists both ways in;
+- visitor keys: unknown providers, malformed keys and keys from the wrong provider are refused before any network call; only the provider's own "yes" lets a run start; redirects are never followed; a key never appears in the run log, an error or the dashboard's data; and any model can be driven, stepping down from forced tool calls to plain JSON when a model can't do them;
+- the dashboard login: passwords are only stored as hashes, sessions can't be forged or reused after they expire or the password changes, sign-ins are rate limited, and sign-ins from other sites are refused.
 
 ## 2. The evaluation
 

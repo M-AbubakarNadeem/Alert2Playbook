@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Dashboard · Alert2Playbook</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/admin.css">
+<script>
+  try { const t = localStorage.getItem("a2p-theme-v2"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body class="admin">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.6c.5-.1.9-.1 1.4-.1 6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 6.6A16.7 16.7 0 0 0 2.5 12s3.5 6.5 9.5 6.5c1.6 0 3-.4 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/></symbol>
+    <symbol id="i-login" viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l4-4-4-4M14 12H4"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 16l4-4-4-4M19 12H9"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.3 3 17.5a2 2 0 0 0 1.7 3h14.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  </defs>
+</svg>
+
+<header class="top scrolled">
+  <div class="wrap top-row">
+    <a class="brand" href="/" aria-label="Back to Alert2Playbook">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" class="bm-bg"/><path d="M8.5 16 12 12.5 15.5 16 12 19.5z" class="bm-diamond"/><path d="M19 12.5h5M19 16h5M19 19.5h3.5" class="bm-lines"/></svg>
+      <span class="brand-name">Alert2Playbook</span>
+    </a>
+    <span class="admin-tag">Dashboard</span>
+    <div class="top-actions">
+      <span class="who small muted" id="who" hidden></span>
+      <button class="icon-btn" id="theme" type="button" aria-label="Switch between light and dark" title="Light or dark"><svg class="i"><use href="#i-contrast"/></svg></button>
+      <button class="btn sm" id="logout" type="button" hidden><svg class="i"><use href="#i-logout"/></svg>Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+
+  <section class="signin" id="signin" hidden>
+    <form class="signin-card" id="login-form" autocomplete="on" novalidate>
+      <span class="signin-ico"><svg class="i"><use href="#i-lock"/></svg></span>
+      <h1>Sign in</h1>
+      <p class="muted">This page is only for the owner of the site.</p>
+      <label class="field">Username
+        <input id="username" name="username" autocomplete="username" autocapitalize="off" spellcheck="false">
+      </label>
+      <label class="field">Password
+        <span class="key-input">
+          <input id="password" name="password" type="password" autocomplete="current-password">
+          <button type="button" class="eye" id="pw-eye" aria-label="Show the password" aria-pressed="false"><svg class="i"><use href="#i-eye"/></svg></button>
+        </span>
+      </label>
+      <button class="btn primary" id="login-go" type="submit"><svg class="i"><use href="#i-login"/></svg>Sign in</button>
+      <div id="login-msg" aria-live="polite"></div>
+    </form>
+  </section>
+
+  <section class="dash" id="dash" hidden>
+    <header class="dash-head">
+      <div>
+        <h1>Who's running the agents</h1>
+        <p class="muted" id="dash-sub">Loading…</p>
+      </div>
+      <div class="row">
+        <button class="btn sm" id="refresh" type="button"><svg class="i"><use href="#i-rotate"/></svg>Refresh</button>
+        <button class="btn sm" id="csv" type="button"><svg class="i"><use href="#i-download"/></svg>Download CSV</button>
+      </div>
+    </header>
+
+    <div id="store-note"></div>
+
+    <dl class="kpis" id="kpis"></dl>
+
+    <div class="dash-grid">
+      <section class="card">
+        <h2>Providers people use</h2>
+        <p class="fine">Share of visitor runs, and how many different keys came from each one.</p>
+        <div id="providers"></div>
+      </section>
+      <section class="card">
+        <h2>Visitor runs, last 14 days</h2>
+        <p class="fine" id="days-sub"></p>
+        <div class="days" id="days"></div>
+      </section>
+    </div>
+
+    <section class="card table-card">
+      <div class="table-head">
+        <h2>Every key check and run</h2>
+        <div class="filters">
+          <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" placeholder="Search name, model, key, country" aria-label="Search"></label>
+          <select id="f-provider" aria-label="Provider"></select>
+          <select id="f-kind" aria-label="What happened">
+            <option value="all">Runs and key checks</option>
+            <option value="runs">Runs only</option>
+            <option value="check">Key checks only</option>
+          </select>
+          <label class="toggle"><input type="checkbox" id="f-mine"> My own runs</label>
+        </div>
+      </div>
+      <p class="fine keynote"><svg class="i"><use href="#i-lock"/></svg>Keys are never stored, so they can't be shown in full. You see the first and last 4 characters, plus a fingerprint that tells you when the same key comes back.</p>
+      <div class="table-scroll"><table class="t runs" id="runs"></table></div>
+      <p class="fine" id="count"></p>
+    </section>
+  </section>
+</main>
+
+<script src="/admin.js"></script>
+</body>
+</html>

@@ -19,7 +19,9 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-19 tests in about 4 seconds. They use the real knowledge graph and a scripted fake AI, so they need no internet and no keys. They check the knowledge graph, the search, every guard on page 6, the critic loop, the analyst feedback loop, the demo-code lock and the MCP server. A line of green dots and "19 passed" means everything works.
+74 tests in about 15 seconds. They use the real knowledge graph, a scripted fake AI and fake provider replies, so they need no internet and no keys. They check the knowledge graph, the search, every guard on page 6, the critic loop, the analyst feedback loop, the demo-code lock, visitor keys (format checks, the provider check, that a key never ends up in a log or an error), the dashboard login and the MCP server. A line of green dots and "74 passed" means everything works.
+
+The tests never read your secrets file, so they can't touch your real database or keys.
 
 ## 3. Get the free keys
 
@@ -45,9 +47,21 @@ This creates a Pinecone index called `alert2playbook` in AWS us-east-1 and loads
 python scripts/dev.py
 ```
 
-Open http://127.0.0.1:8000. Click a sample and press **Start**, or build your own alert. If you set `A2P_DEMO_CODE` in your `.env`, live runs are locked locally too; leave it out and everything runs without a code.
+Open http://127.0.0.1:8000. Click a sample and press **Start**, or build your own alert. If you set `A2P_DEMO_CODE` in your `.env`, live runs are locked locally too: add your own key in the box under the alert, or use the code. Leave it out and everything runs on `GROQ_API_KEY` without a code.
 
-## 6. Useful scripts
+The local server sends the same security headers as the live site and serves the dashboard at http://127.0.0.1:8000/admin.
+
+## 6. Set up the dashboard (optional)
+
+```bash
+python scripts/make_admin.py
+```
+
+This writes a username, a random password, the password's hash and two random secrets into the file named by `A2P_ENV_FILE`. It never prints the password: open that file to read it. Only the hash goes to Vercel. Run it again any time to change the password, which also signs out every open session.
+
+For the run log and rate limits to survive between serverless instances, add a free Upstash Redis database (page 12 explains why). Without one, they live in memory and reset whenever the server restarts.
+
+## 7. Useful scripts
 
 | Command | What it does |
 |---|---|
@@ -59,19 +73,21 @@ Open http://127.0.0.1:8000. Click a sample and press **Start**, or build your ow
 | `python eval/tune_retrieval.py` | Compare search settings offline from saved triage answers |
 | `python benchmarks/compare.py` | LangGraph vs CrewAI on the same alerts (needs the benchmark environment, see the file's header) |
 | `python scripts/export_results.py` | Copy the latest measured numbers into `public/results.json` for the website |
+| `python scripts/make_admin.py` | Create or change the dashboard login |
 
-## 7. Deploy for free on Vercel
+## 8. Deploy for free on Vercel
 
 1. Push the repository to GitHub.
 2. On vercel.com, **Add New → Project**, import the repository. No build settings are needed: Vercel finds the FastAPI `app` in `server.py` and runs it as one Python function, and serves `public/` as the website from its CDN. `vercel.json` only raises the time limit to 60 seconds.
-3. In **Settings → Environment Variables**, add `GROQ_API_KEY`, `PINECONE_API_KEY`, `PINECONE_HOST` and, for tracing, `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT=alert2playbook`. If your Groq key is paid, also add `A2P_DEMO_CODE` (any phrase you choose), so only people you give it to can run live.
-4. Deploy. The page, the API, the Agent Card and the A2A endpoint are all on one URL.
+3. In **Settings → Environment Variables**, add `GROQ_API_KEY`, `PINECONE_API_KEY`, `PINECONE_HOST` and, for tracing, `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT=alert2playbook`. If your Groq key is paid, also add `A2P_DEMO_CODE` (any phrase you choose), so your key only runs for people you give it to. Everyone else brings their own key.
+4. For the dashboard: in **Storage**, add **Upstash for Redis** (free). Vercel sets `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you. Then add `A2P_ADMIN_USER`, `A2P_ADMIN_PASSWORD_HASH`, `A2P_ADMIN_SESSION_SECRET` and `A2P_FINGERPRINT_SECRET` from your secrets file. Never add the plain password.
+5. Deploy. The page, the API, the Agent Card and the A2A endpoint are all on one URL.
 
 The live demo of this project is deployed from the command line instead: `vercel deploy --prod` with a `VERCEL_TOKEN`, from the project folder. Both ways give the same result.
 
 Why Vercel: free, no credit card, no server to manage, and both Vercel's default region and Pinecone's free region are in the US East, so search calls stay fast.
 
-## 8. Change the models
+## 9. Change the models
 
 Each agent's model is a setting, so you can swap them without touching code:
 
@@ -88,7 +104,11 @@ A2P_GUARD_MODEL=meta-llama/llama-prompt-guard-2-86m
 
 | You see | It means | Do this |
 |---|---|---|
-| "Live runs are locked" | The server has a demo code and the request had none (or a wrong one) | Click the lock button at the top and enter the code, or choose a sample to watch a saved run |
+| "Live runs need your own API key" | The server has a demo code, and the request had neither a key nor the code | Add your key in the box under the alert, or watch a saved run |
+| "Groq didn't accept that key" | The provider refused the key during the check | Copy it again in full, check it hasn't been revoked, and that you picked the right provider |
+| "That's 10 live runs from you in the last hour" | The per-visitor limit | Wait, or watch a saved run |
+| "... couldn't produce the structured answers this needs" | The model you picked can't fill in the agents' forms reliably | Pick a larger model from the list |
+| Dashboard says "The shared database isn't connected" | No Upstash variables on the server | Add Upstash (step 4 of the deploy) |
 | "The AI provider is busy right now" | Groq's per-minute or daily limit was hit (common on a free key) | Wait a minute, or use a paid key |
 | Footer says "BM25 only" | No Pinecone key, or Pinecone failed | Add the key and run `scripts/index_pinecone.py` |
 | `GROQ_API_KEY is not set` | The server started without the key | Check `.env` or the Vercel settings |

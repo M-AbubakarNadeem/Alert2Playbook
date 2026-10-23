@@ -97,4 +97,4 @@ Many alert tools only cover normal company IT. Adding the ICS domain lets the sa
 
 Responders already think in these phases, so the playbook drops straight into how SOC teams work.
 
-Back to the [start](README.md).
+Next: [Your own key and the dashboard](12-your-own-key.md)

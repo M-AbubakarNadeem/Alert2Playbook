@@ -9,9 +9,12 @@ Alert2Playbook/
 │   ├── retrieval.py         hybrid search: Pinecone + BM25, merged with RRF
 │   ├── schemas.py           the forms each agent must fill in (Pydantic models)
 │   ├── prompts.py           the instructions for each agent, and what context each one sees
-│   ├── llm.py               calls Groq, checks the form, retries, falls back to a bigger model
+│   ├── llm.py               calls Groq (or a visitor's provider), checks the form, retries, falls back; scrubs keys from errors
 │   ├── graph.py             the LangGraph workflow: nodes, edges, critic loop, code checks
-│   ├── service.py           connects the graph to the real Groq, Pinecone and knowledge graph
+│   ├── service.py           connects the graph to Groq, Pinecone and the knowledge graph; builds visitor graphs
+│   ├── providers.py         the providers a visitor can bring a key for, and how a key is checked
+│   ├── store.py             rate limits and the dashboard's run log (Upstash Redis, or memory)
+│   ├── admin.py             the dashboard login: password hash and signed sessions
 │   ├── render.py            turns a finished run into Markdown with linked IDs
 │   ├── a2a.py               the A2A Agent Card and the SendMessage endpoint
 │   └── mcp_server.py        the MCP server with three tools
@@ -20,7 +23,10 @@ Alert2Playbook/
 │   ├── index.html           page skeleton: header, 4 tabs, footer, step panel, SVG icon set
 │   ├── app.css              the look: colours, type, spacing, animations, phone layout (light and dark)
 │   ├── content.js           all explanations: steps, parts, messages, glossary, alert-builder templates
-│   ├── app.js               the behaviour: tabs, hero animation, alert picker and builder, unlock, live runs, replays, plan view, diagram, chart
+│   ├── app.js               the behaviour: tabs, hero animation, alert picker and builder, your-own-key panel, live runs, replays, plan view, diagram, chart
+│   ├── admin.html           the owner's dashboard at /admin (sign in, usage numbers, every run)
+│   ├── admin.js             the dashboard's behaviour, including the CSV export
+│   ├── admin.css            the dashboard's look
 │   ├── favicon.svg          the browser-tab icon
 │   ├── og.png               the preview image shown when the link is shared
 │   └── results.json         measured numbers for the "Results" tab (made by scripts/export_results.py)
@@ -34,7 +40,8 @@ Alert2Playbook/
 │   ├── index_pinecone.py    creates and fills the Pinecone index
 │   ├── run_samples.py       runs the live pipeline on the samples and saves the results
 │   ├── export_results.py    copies the measured numbers into public/results.json
-│   └── dev.py               local server: API + page on http://127.0.0.1:8000
+│   ├── make_admin.py        creates or changes the dashboard login, saved to your secrets file
+│   └── dev.py               local server: API + page + /admin on http://127.0.0.1:8000, same security headers as Vercel
 ├── eval/
 │   ├── build_eval_set.py    turns Atomic Red Team tests into 30 labelled alerts (alerts.jsonl, kept out of git)
 │   ├── run_eval.py          scores the ATT&CK mapping
@@ -47,12 +54,14 @@ Alert2Playbook/
 ├── tests/
 │   ├── test_pipeline.py     knowledge graph, search, guards, critic loop, feedback loop
 │   ├── test_mcp.py          starts the MCP server and calls its tools
-│   ├── test_server.py       the demo-code lock on the web API and the A2A endpoint
-│   └── conftest.py          lets the tests import the package
+│   ├── test_server.py       access rules, visitor keys, the run log, A2A and the dashboard
+│   ├── test_keys.py         key format checks, the provider check, running on any provider, no key in errors
+│   ├── test_admin.py        password hashing and signed sessions
+│   └── conftest.py          keeps the tests offline: no secrets file, an empty in-memory store
 ├── docs/                    you are here
 ├── requirements.txt         what the deployed function needs
 ├── requirements-dev.txt     plus what you need for scripts, tests and MCP
-├── vercel.json              tells Vercel how to route URLs to the function
+├── vercel.json              the function's time limit, /admin without .html, and the security headers
 ├── .env.example             template for your keys (copy to .env, which git ignores)
 ├── LICENSE                  MIT licence, plus the MITRE attribution
 └── README.md                the front page of the repository
@@ -69,6 +78,10 @@ flowchart TB
     mcp --> service
     service --> graph[graph.py]
     graph --> llm[llm.py] --> groq[(Groq)]
+    llm --> other[(Visitor's provider)]
+    api --> providers[providers.py]
+    api --> store[store.py] --> upstash[(Upstash Redis)]
+    api --> admin[admin.py]
     graph --> retrieval[retrieval.py] --> pinecone[(Pinecone)]
     retrieval --> kb[kb.py]
     graph --> kb
@@ -91,6 +104,9 @@ flowchart TB
 | change the look | `public/app.css` |
 | change or add a sample alert | `data/samples.json`, then `python scripts/run_samples.py` |
 | change the demo code | `A2P_DEMO_CODE` in Vercel's settings, then redeploy |
+| add a provider visitors can use | `providers.py`, one line in `PROVIDERS` |
+| change the visitor limits | the `VISITOR_*` numbers near the top of `server.py` |
+| change the dashboard password | `python scripts/make_admin.py`, then update the hash in Vercel |
 | add an API endpoint | `server.py` |
 | add an MCP tool | `mcp_server.py` |
 

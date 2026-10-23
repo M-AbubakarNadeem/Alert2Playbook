@@ -30,8 +30,9 @@
     replay: false,         // the run on screen is a saved one
     busy: false,
     code: store.get("a2p-code"),
-    wantCode: false,       // the visitor asked to enter the demo code
-    flash: "",             // one-off note under the Start button
+    visitor: null,         // {name, provider, label, key, masked, models, model}; memory only
+    providers: [],
+    alertKind: "pasted",   // sample:<id>, builder:<kind>, edited or pasted, for the run log
     storyRun: null,
   };
 
@@ -226,25 +227,113 @@
     return { start, setRun, check };
   })();
 
-  /* ================================================================ demo code */
+  /* ================================================================ access: your own key, or the demo code */
+  // A visitor's key only ever lives in S.visitor, in this page's memory. It is never put
+  // in storage or in a URL, so reloading the page forgets it.
+  const smooth = () => (reduceMotion.matches ? "auto" : "smooth");
   const serverLocked = () => S.health?.live_runs === "need demo code";
-  const locked = () => serverLocked() && !S.code;
+  const canRunLive = () => !serverLocked() || !!S.code || !!S.visitor?.model;
+  const locked = () => !canRunLive();
+  const providerById = (id) => S.providers.find((p) => p.id === id);
+
   function renderLock() {
     const chip = $("#lock-chip");
     if (!serverLocked()) { chip.hidden = true; return; }
     chip.hidden = false;
-    chip.classList.toggle("on", !!S.code);
-    chip.innerHTML = `${icon(S.code ? "unlock" : "lock")}<span class="lock-text">${S.code ? "Live runs unlocked" : "Live runs locked"}</span>`;
-    chip.title = S.code ? "Click to lock again" : "Live runs need a demo code. Saved runs always work.";
+    const live = canRunLive();
+    chip.classList.toggle("on", live);
+    const label = S.code ? "Live · demo code" : S.visitor?.model ? `Live · ${S.visitor.label}` : "Run it live";
+    chip.innerHTML = `${icon(live ? "bolt" : "key")}<span class="lock-text">${esc(label)}</span>`;
+    chip.title = live ? "Live runs are on. Click to see how they run." : "Add your own API key to run the agents live.";
     chip.setAttribute("aria-label", chip.title);
   }
   $("#lock-chip").onclick = () => {
-    if (S.code) { S.code = null; store.set("a2p-code", null); renderLock(); updateStart(); return; }
-    S.wantCode = true;
     showTab("try", { scroll: false });
-    updateStart();
-    $("#code-area").scrollIntoView({ block: "center", behavior: reduceMotion.matches ? "auto" : "smooth" });
-    setTimeout(() => $("#code").focus({ preventScroll: true }), 350);
+    $("#live").scrollIntoView({ block: "center", behavior: smooth() });
+    if (!canRunLive()) setTimeout(() => $($("#v-name").value.trim() ? "#v-key" : "#v-name").focus({ preventScroll: true }), 350);
+  };
+
+  function renderProviders() {
+    const opt = (p) => `<option value="${esc(p.id)}">${esc(p.label)}</option>`;
+    const free = S.providers.filter((p) => p.free_tier), paid = S.providers.filter((p) => !p.free_tier);
+    $("#v-provider").innerHTML = `<optgroup label="Free tier">${free.map(opt).join("")}</optgroup><optgroup label="Paid">${paid.map(opt).join("")}</optgroup>`;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem("a2p-visitor") || "{}"); } catch {}
+    if (saved.name) $("#v-name").value = saved.name;
+    $("#v-provider").value = providerById(saved.provider) ? saved.provider : "groq";
+    renderHint();
+  }
+  function renderHint() {
+    const p = providerById($("#v-provider").value);
+    $("#v-get").innerHTML = p ? `No key yet? <a href="${esc(p.signup_url)}" target="_blank" rel="noopener noreferrer">Get one from ${esc(p.label)}</a>${p.free_tier ? ", it's free" : ""}.` : "";
+  }
+  $("#v-provider").onchange = () => { renderHint(); keyNote("", ""); };
+
+  $("#v-eye").onclick = () => {
+    const input = $("#v-key"), show = input.type === "password";
+    input.type = show ? "text" : "password";
+    const eye = $("#v-eye");
+    eye.setAttribute("aria-pressed", String(show));
+    eye.setAttribute("aria-label", show ? "Hide the key" : "Show the key");
+    eye.innerHTML = icon(show ? "eye-off" : "eye");
+  };
+
+  function keyNote(kind, text) {
+    $("#v-msg").innerHTML = text ? `<div class="note ${kind}">${icon(kind === "bad" ? "warn" : "info")}<span>${esc(text)}</span></div>` : "";
+  }
+
+  $("#key-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const name = $("#v-name").value.trim(), provider = $("#v-provider").value, key = $("#v-key").value.trim();
+    if (name.length < 2) { keyNote("bad", "Add your name first."); $("#v-name").focus(); return; }
+    if (!key) { keyNote("bad", "Paste your API key."); $("#v-key").focus(); return; }
+    const btn = $("#v-check"), label = providerById(provider)?.label || "the provider";
+    btn.disabled = true; btn.classList.add("busy");
+    keyNote("info", `Checking the key with ${label}…`);
+    try {
+      const r = await fetch("/api/keys/check", { method: "POST", headers: { "Content-Type": "application/json", "X-LLM-Key": key }, body: JSON.stringify({ name, provider }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { keyNote("bad", typeof d.detail === "string" ? d.detail : "That key didn't work."); return; }
+      S.visitor = { name, provider: d.provider, label: d.label, key, masked: d.masked, models: d.models, model: d.default, guard: d.guard };
+      try { localStorage.setItem("a2p-visitor", JSON.stringify({ name, provider: d.provider })); } catch {}
+      $("#v-key").value = "";
+      keyNote("", "");
+      refreshAccess();
+    } catch {
+      keyNote("bad", "Couldn't reach the server. Check your connection and try again.");
+    } finally {
+      btn.disabled = false; btn.classList.remove("busy");
+    }
+  };
+
+  function renderReady() {
+    const box = $("#live-ready"), form = $("#key-form"), v = S.visitor;
+    $(".owner").hidden = !!S.code;
+    if (S.code) {
+      form.hidden = true; box.hidden = false;
+      box.innerHTML = `<div class="ready-top">${icon("check-circle")}<span><b>Live runs are on</b> with the demo code.</span><span class="spacer"></span><button class="link-btn" id="v-off" type="button">Turn it off</button></div>`;
+      $("#v-off").onclick = () => { S.code = null; store.set("a2p-code", null); refreshAccess(); };
+      return;
+    }
+    if (!v) { form.hidden = false; box.hidden = true; box.innerHTML = ""; return; }
+    form.hidden = true; box.hidden = false;
+    box.innerHTML = `
+      <div class="ready-top">${icon("check-circle")}<span><b>Your key works.</b> Live runs are on.</span><span class="spacer"></span><button class="link-btn" id="v-change" type="button">Use a different key</button></div>
+      <div class="ready-meta"><span class="chip">${esc(v.name)}</span><span class="chip">${esc(v.label)}</span><span class="chip">${esc(v.masked)}</span></div>
+      <label class="ready-model">Model${v.guard ? "" : ` <span class="hint">The prompt-injection check only runs on Groq models.</span>`}
+        <select id="v-model">${v.models.map((m) => `<option value="${esc(m)}"${m === v.model ? " selected" : ""}>${esc(m)}</option>`).join("")}</select>
+      </label>`;
+    $("#v-model").onchange = (e) => { v.model = e.target.value; updateStart(); };
+    $("#v-change").onclick = () => { S.visitor = null; refreshAccess(); $("#v-key").focus(); };
+  }
+
+  function refreshAccess() { renderReady(); renderLock(); updateStart(); renderPicks(true); }
+
+  $("#show-code").onclick = () => {
+    const area = $("#code-area"), open = area.hidden;
+    area.hidden = !open;
+    $("#show-code").setAttribute("aria-expanded", String(open));
+    if (open) $("#code").focus();
   };
   async function unlock() {
     const code = $("#code").value.trim();
@@ -254,21 +343,20 @@
       const r = await fetch("/api/unlock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
       if (r.ok) {
         S.code = code; store.set("a2p-code", code);
-        S.wantCode = false; S.flash = "Unlocked. Live runs work until you close this tab.";
-        msg.innerHTML = ""; $("#code").value = "";
-        renderLock(); updateStart(); renderPicks(true);
+        msg.innerHTML = ""; $("#code").value = ""; $("#code-area").hidden = true;
+        refreshAccess();
       } else {
         const d = await r.json().catch(() => ({}));
-        msg.innerHTML = `<div class="note bad">${icon("warn")}<span>${esc(d.detail || "That code did not work.")}</span></div>`;
+        msg.innerHTML = `<div class="note bad">${icon("warn")}<span>${esc(d.detail || "That code didn't work.")}</span></div>`;
       }
-    } catch { msg.innerHTML = `<div class="note bad">${icon("warn")}<span>Could not reach the server.</span></div>`; }
+    } catch { msg.innerHTML = `<div class="note bad">${icon("warn")}<span>Couldn't reach the server.</span></div>`; }
   }
   $("#code-go").onclick = unlock;
   $("#code").addEventListener("keydown", (e) => { if (e.key === "Enter") unlock(); });
 
   /* ================================================================ 01 choose */
   function renderPicks(keep = false) {
-    const own = serverLocked() && !S.code ? "Runs live · needs the demo code" : "Runs live";
+    const own = canRunLive() ? "Runs live" : "Runs live · needs your API key";
     $("#picks").innerHTML = S.samples.map((s, i) => `
       <button class="q-item" type="button" data-i="${i}" aria-pressed="false">
         <span class="q-ico">${icon(C.SAMPLE_ICONS[s.id] || "scan")}</span>
@@ -302,7 +390,7 @@
   }
   function pickSample(i, btn) {
     if (S.busy) return;
-    S.picked = S.samples[i]; S.flash = "";
+    S.picked = S.samples[i]; S.alertKind = "sample:" + S.picked.id;
     pressed(btn);
     $("#builder").hidden = true;
     setContext(S.picked.where, S.picked.story);
@@ -312,7 +400,7 @@
   }
   function pickOwn(btn) {
     if (S.busy) return;
-    S.picked = "own"; S.flash = "";
+    S.picked = "own"; S.alertKind = "pasted";
     pressed(btn);
     renderBuilder();
     $("#builder").hidden = false;
@@ -331,7 +419,7 @@
     $("#count").textContent = `${n.toLocaleString()} / ${MAX.toLocaleString()}`;
     $("#count").style.color = n > MAX ? "var(--danger)" : "";
     if (S.picked && S.picked !== "own" && $("#alert").value !== S.picked.alert) {
-      S.picked = "own"; pressed(null);        // an edited sample is a custom alert now
+      S.picked = "own"; S.alertKind = "edited"; pressed(null);  // an edited sample is a custom alert now
       setContext("Edited alert", "");
     }
     updateStart();
@@ -375,7 +463,7 @@
       $$("[data-f]", $("#builder")).forEach((el) => (v[el.dataset.f] = el.value.trim() || el.placeholder));
       const now = new Date().toISOString().replace("T", " ").slice(0, 19) + "Z";
       setAlert(t.render(v, now));
-      S.picked = "own";
+      S.picked = "own"; S.alertKind = "builder:" + kind;
       setContext(t.label, "");
       updateStart();
       $(".editor-card").scrollIntoView({ block: "center", behavior: reduceMotion.matches ? "auto" : "smooth" });
@@ -384,32 +472,34 @@
 
   /* ================================================================ start button */
   function updateStart() {
-    const btn = $("#start"), note = $("#start-note");
+    const btn = $("#start"), note = $("#start-note"), again = $("#replay");
     const text = $("#alert").value.trim();
     const valid = text.length >= 10 && text.length <= MAX;
     const isSample = S.picked && S.picked !== "own" && S.picked.run;
-    $("#code-area").hidden = !(locked() && (S.wantCode || (S.picked && !isSample)));
     const set = (ic, label, disabled) => { btn.innerHTML = `${icon(ic)}<span>${label}</span>`; btn.disabled = disabled; };
-    const flash = S.flash ? `<b>${esc(S.flash)}</b> ` : "";
     btn.classList.toggle("busy", S.busy);
+    again.hidden = true;
     if (S.busy) { set("rotate", "Working…", true); return; }
     if (!S.picked) { set("play", "Start the agents", true); note.textContent = "Choose an alert first."; return; }
-    if (isSample && locked()) {
+    if (locked() && isSample) {
       set("play", "Watch a saved run", false);
-      note.innerHTML = "Plays back a real run saved earlier, step by step. No AI is called. Live runs need the demo code (the lock at the top).";
+      note.textContent = "This plays back a real run I saved earlier, step by step, without calling any AI. Add your own key below to run it live.";
     } else if (locked()) {
-      set("lock", "Enter the demo code to run live", true);
-      note.textContent = "Your own alert needs a live run, and live runs use paid AI credit. Enter the demo code below.";
+      set("key", "Add your key to run this", true);
+      note.textContent = "Your own alert needs a live run. Add an API key below. A free one is fine.";
     } else {
       set("bolt", "Run the agents live", !valid);
-      note.innerHTML = flash + (valid ? "The agents work on this alert now. It takes about 7 to 15 seconds." : "Write or build an alert first (at least 10 characters).");
+      const on = S.code ? "my demo code" : S.visitor ? `${S.visitor.label}, ${S.visitor.model}` : "this server";
+      note.textContent = valid ? `Runs live on ${on}. It usually takes 7 to 20 seconds.` : "Write or build an alert first (at least 10 characters).";
+      if (isSample) again.hidden = false;
     }
   }
   $("#start").onclick = () => {
     const isSample = S.picked && S.picked !== "own" && S.picked.run;
     if (isSample && locked()) return replay(S.picked.run);
-    return liveRun("/api/run", { alert: $("#alert").value.trim() }, []);
+    return liveRun("/api/run", { alert: $("#alert").value.trim(), alert_kind: S.alertKind }, []);
   };
+  $("#replay").onclick = () => { if (S.picked?.run && !S.busy) replay(S.picked.run); };
 
   /* ================================================================ 02 the timeline */
   function buildSteps() {
@@ -513,8 +603,7 @@
       ? st.map((s) => `${s.model ? esc(s.model) + " · " : ""}${fmtMs(s.ms || 0)}${s.input_tokens != null ? ` · ${(s.input_tokens + s.output_tokens).toLocaleString()} tokens` : ""}${s.fallback_from ? ` · backup model used (first try: ${esc(s.fallback_from)})` : ""}`).join("<br>")
       : "Not run yet";
     $("#drawer-ico").innerHTML = icon(meta.icon);
-    $("#drawer-kicker").textContent = `Step ${i + 1} of ${C.STEPS.length}`;
-    $("#drawer-title").textContent = meta.name;
+    $("#drawer-title").textContent = `${i + 1}. ${meta.name}`;
     $("#drawer-body").innerHTML = `
       <p>${esc(meta.plain)}</p>
       <dl class="kv">
@@ -627,17 +716,27 @@
   }
 
   async function liveRun(url, body, baseSteps, firstNode = "screen") {
-    S.busy = true; S.replay = false; S.flash = ""; updateStart();
+    S.busy = true; S.replay = false; updateStart();
     if (!baseSteps.length) { S.run = { alert: body.alert }; S.steps = []; }
     paintSteps(firstNode);
     renderResultLoading("The agents are working…");
     toWatch();
     try {
-      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Demo-Code": S.code || "" }, body: JSON.stringify(body) });
+      // The demo code wins if both are set. Otherwise the visitor's key goes in a header
+      // (never in the URL or the body) and their name, provider and model in the body.
+      const headers = { "Content-Type": "application/json" };
+      if (S.code) headers["X-Demo-Code"] = S.code;
+      else if (S.visitor?.model) {
+        headers["X-LLM-Key"] = S.visitor.key;
+        body = { ...body, visitor: { name: S.visitor.name, provider: S.visitor.provider, model: S.visitor.model } };
+      }
+      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        if (res.status === 401) { S.code = null; store.set("a2p-code", null); renderLock(); }
-        throw new Error(typeof d.detail === "string" ? d.detail : res.statusText);
+        const detail = typeof d.detail === "string" ? d.detail : res.statusText;
+        if (res.status === 401 && S.code) { S.code = null; store.set("a2p-code", null); refreshAccess(); }
+        else if (res.status === 401 && S.visitor) { S.visitor = null; refreshAccess(); keyNote("bad", detail); }
+        throw new Error(detail);
       }
       const reader = res.body.getReader(), dec = new TextDecoder();
       let buf = "";
@@ -679,7 +778,7 @@
     $("#result").innerHTML = `<div class="loading"><p>${esc(note)}</p>${[92, 70, 84, 60, 76].map((w) => `<div class="skeleton" style="width:${w}%"></div>`).join("")}</div>`;
   }
   function renderResultError(m) {
-    $("#result").innerHTML = `<div class="banner bad">${icon("warn")}<div>${esc(m)}</div></div><div class="empty"><p>The sample alerts always work, even without the demo code.</p></div>`;
+    $("#result").innerHTML = `<div class="banner bad">${icon("warn")}<div>${esc(m)}</div></div><div class="empty"><p>The saved runs always work, even without a key.</p></div>`;
   }
 
   function refIndex(r) {
@@ -747,7 +846,7 @@
     $("#result").innerHTML = `
       <div class="result-in">
         ${r.guard?.flagged ? `<div class="banner bad">${icon("message-alert")}<div><b>The safety check found hidden instructions in this alert</b> (score ${r.guard.score.toFixed(3)}). Someone wrote orders for the AI inside the alert. The agents ignored them, but read this plan with extra care.</div></div>` : ""}
-        ${S.replay ? `<div class="banner info">${icon("history")}<div>This is a <b>saved run</b>, played back. Unlock with the demo code to run the agents live on any alert.</div></div>` : ""}
+        ${S.replay ? `<div class="banner info">${icon("history")}<div>This is a <b>saved run</b>, played back. Add your own API key above to run the agents live on any alert.</div></div>` : ""}
         <div class="res-head">
           <div class="tags"><span class="tag sev ${esc(t.severity)}">${esc(t.severity)} severity</span><span class="tag">${esc(t.platform)}</span></div>
           <h3>${esc(pb.title)}</h3>
@@ -781,7 +880,7 @@
       $("#approve").disabled = true;
     };
     $("#change").onclick = () => {
-      if (locked()) { $("#decision").innerHTML = "<b>Needs the demo code.</b> Asking for changes runs the writer again live (the lock at the top)."; return; }
+      if (locked()) { $("#decision").innerHTML = "<b>That needs a live run.</b> Asking for changes runs the writer again, so add your API key in the box near the top first."; return; }
       $("#fb").hidden = !$("#fb").hidden;
       if (!$("#fb").hidden) $("#fbtext").focus();
     };
@@ -997,7 +1096,7 @@
       </div>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">01</span><div><h2>The accuracy test</h2><p>${cur.alerts} alerts built from Atomic Red Team, a free library where every test is a real attack command with a known answer. Anything that gives the answer away was removed. Each alert is one bare command with no story around it, so this test is harder than real life.</p></div></header>
+        <header class="block-head reveal"><div><h2>The accuracy test</h2><p>I built ${cur.alerts} alerts from Atomic Red Team, a free library where every test is a real attack command with a known answer. I stripped out anything that gave the answer away. Each alert is one bare command with no story around it, so it's harder than a real alert.</p></div></header>
         <div class="card reveal">
           <div class="legend"><span><i style="background:var(--series-1)"></i>Current version · hybrid search, ${cur.candidates} candidates</span><span><i style="background:var(--series-base)"></i>First version · keyword search, ${base.candidates} candidates</span></div>
           <div class="bars">
@@ -1006,24 +1105,24 @@
             ${bar("Right family in the final picks", cur.family3, base.family3, 2)}
             ${bar("Right technique picked first", cur.exact1, base.exact1, 3)}
           </div>
-          <p class="fine">Why “picked first” is low: many test commands run through PowerShell, and the agent often lists PowerShell first. That is true, but it is not the labelled answer, which is usually second. This is why the plan covers up to three techniques.</p>
+          <p class="fine">Why “picked first” is low: a lot of these commands run through PowerShell, so the agent often lists PowerShell first. That's not wrong, but it isn't the labelled answer, which usually comes second. It's also why the plan covers up to three techniques.</p>
         </div>
       </section>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">02</span><div><h2>Does meaning search help?</h2><p>To compare search methods fairly, only the search step was replayed, with the same inputs every time. How often is the right technique in a shortlist of 10 to 30 results?</p></div></header>
+        <header class="block-head reveal"><div><h2>Does meaning search help?</h2><p>To compare search methods fairly, I replayed only the search step with the same inputs each time. How often does the right technique land in a shortlist of 10 to 30 results?</p></div></header>
         <div class="card reveal">
           <div class="legend">${series.map((s) => `<span><i class="line" style="background:var(${s.color})"></i>${esc(s.name)}</span>`).join("")}</div>
           <div class="chart-wrap" id="chart"></div>
           <button class="btn sm view-toggle" id="chart-table-btn" type="button" aria-expanded="false">${icon("list-check")}Show as a table</button>
           <div class="table-scroll" id="chart-table" hidden style="margin-top:12px"><table class="t"><thead><tr><th>Search method</th>${R.retrieval.ks.map((k) => `<th class="num">Top ${k}</th>`).join("")}</tr></thead>
             <tbody>${R.retrieval.rows.map((row) => `<tr><td>${esc(row.name)}</td>${row.values.map((v) => `<td class="num">${v}%</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-          <p class="fine">Keyword search stops improving at 20 results. Keyword and meaning together keep finding more, so the mapping agent now sees 25 candidates. At only 10 results the combined search is worse, and that is reported too.</p>
+          <p class="fine">Keyword search stops improving at 20 results. Keyword and meaning together keep finding more, which is why the mapping agent now gets 25 candidates. At just 10 results the combined search actually does worse, and I've left that in.</p>
         </div>
       </section>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">03</span><div><h2>LangGraph vs CrewAI</h2><p>The same system built a second time with CrewAI, another popular agent framework: same models, same instructions, same search, same checks. Both ran the same ${b.alerts} sample alerts.</p></div></header>
+        <header class="block-head reveal"><div><h2>LangGraph vs CrewAI</h2><p>I rebuilt the same system in CrewAI, another popular agent framework, and kept the models, instructions, search and checks identical. Then I ran both on the same ${b.alerts} sample alerts.</p></div></header>
         <div class="card reveal">
           <div class="table-scroll"><table class="t"><thead><tr><th></th>${b.columns.map((c, i) => `<th class="${i === 0 ? "hl" : ""}">${esc(c)}</th>`).join("")}</tr></thead>
           <tbody>${b.rows.map((row) => `<tr><td><b>${esc(row[0])}</b></td>${row.slice(1).map((v, i) => `<td class="${i === 0 ? "hl" : ""}">${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
@@ -1032,8 +1131,8 @@
       </section>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">04</span><div><h2>Automatic tests</h2></div></header>
-        <div class="card tests reveal"><span class="t-ico">${icon("flask")}</span><p><b>${R.tests} automatic tests</b> run without internet and without any AI. They check the knowledge graph, the search, every safety guard (fake IDs are caught and removed), the review loop, change requests, the demo-code lock and the MCP tools.</p></div>
+        <header class="block-head reveal"><div><h2>Automatic tests</h2></div></header>
+        <div class="card tests reveal"><span class="t-ico">${icon("flask")}</span><p><b>${R.tests} automatic tests</b> run with no internet and no AI. They cover the knowledge graph, the search, every safety check (fake IDs get caught and removed), the review loop, change requests, the demo-code lock and the MCP tools.</p></div>
       </section>
       <p class="meta-line">${icon("clock")}<span>Measured on ${esc(R.date)}. Full method and every answer: <a href="https://github.com/M-AbubakarNadeem/Alert2Playbook/blob/main/docs/07-measuring-it.md" target="_blank" rel="noopener">docs/07-measuring-it.md</a></span></p>`;
     chart = lineChart($("#chart"), { xs: R.retrieval.ks, series, yMin: 50, yMax: 90, fmtX: (k) => `Top ${k}` });
@@ -1049,14 +1148,15 @@
   /* ================================================================ developers */
   function renderDev() {
     const base = location.origin;
-    const curlRun = `curl -N -X POST ${base}/api/run \\\n  -H "Content-Type: application/json" \\\n  -H "X-Demo-Code: YOUR_DEMO_CODE" \\\n  -d '{"alert": "Sysmon EID 1 on WS-01: schtasks /create /tn upd /tr powershell.exe /sc onlogon /ru SYSTEM"}'`;
-    const a2a = `curl -X POST ${base}/a2a \\\n  -H "Content-Type: application/json" \\\n  -H "X-Demo-Code: YOUR_DEMO_CODE" \\\n  -d '{"jsonrpc": "2.0", "id": 1, "method": "SendMessage",\n       "params": {"message": {"messageId": "m1", "role": "ROLE_USER",\n                  "parts": [{"text": "auditd on web-03: www-data ran useradd -m support2"}]}}}'`;
+    const curlRun = `curl -N -X POST ${base}/api/run \\\n  -H "Content-Type: application/json" \\\n  -H "X-LLM-Key: YOUR_GROQ_KEY" \\\n  -d '{"alert": "Sysmon EID 1 on WS-01: schtasks /create /tn upd /tr powershell.exe /sc onlogon /ru SYSTEM",\n       "visitor": {"name": "Your Name", "provider": "groq", "model": "openai/gpt-oss-120b"}}'`;
+    const a2a = `curl -X POST ${base}/a2a \\\n  -H "Content-Type: application/json" \\\n  -H "X-LLM-Key: YOUR_GROQ_KEY" \\\n  -H "X-LLM-Provider: groq" \\\n  -H "X-LLM-Model: openai/gpt-oss-120b" \\\n  -H "X-Visitor-Name: Your%20Name" \\\n  -d '{"jsonrpc": "2.0", "id": 1, "method": "SendMessage",\n       "params": {"message": {"messageId": "m1", "role": "ROLE_USER",\n                  "parts": [{"text": "auditd on web-03: www-data ran useradd -m support2"}]}}}'`;
     const EP = [
       ["GET", "/api/health", "Versions, models and search mode", false],
       ["GET", "/api/samples", "The sample alerts with their saved runs", false],
-      ["POST", "/api/unlock", "Check a demo code: {\"code\"} → {\"ok\": true}", false],
-      ["POST", "/api/run", "Run an alert: {\"alert\"} → live stream of steps (SSE)", true],
-      ["POST", "/api/feedback", "Rewrite with a change request: {\"state\", \"feedback\"} → live stream", true],
+      ["GET", "/api/providers", "Providers you can bring a key for", false],
+      ["POST", "/api/keys/check", "Check your key: {\"name\", \"provider\"} plus X-LLM-Key → the models it can use", false],
+      ["POST", "/api/run", "Run an alert: {\"alert\", \"visitor\"} → live stream of steps (SSE)", true],
+      ["POST", "/api/feedback", "Rewrite with a change request: {\"state\", \"feedback\", \"visitor\"} → live stream", true],
       ["POST", "/api/markdown", "The plan as Markdown: {\"state\"}", false],
       ["GET", "/.well-known/agent-card.json", "The A2A Agent Card", false],
       ["POST", "/a2a", "A2A JSON-RPC SendMessage → a Task with two artifacts", true],
@@ -1064,26 +1164,26 @@
     const stack = ["Python 3.12", "LangGraph", "FastAPI", "Groq", "gpt-oss-120b", "gpt-oss-20b", "Qwen 3.8 27B", "Llama Prompt Guard 2", "Pinecone", "llama-text-embed-v2", "ATT&CK v20", "D3FEND 1.6", "LangSmith", "Pydantic", "pytest", "Vercel"];
     $("#dev").innerHTML = `
       <section class="block">
-        <header class="block-head reveal"><span class="idx">01</span><div><h2>Web API</h2><p>“Demo code” means the <span class="mono">X-Demo-Code</span> header. Live runs use paid AI credit, so they are locked on this public demo. <a href="${base}/api/docs" target="_blank" rel="noopener">Interactive API docs</a></p></div></header>
+        <header class="block-head reveal"><div><h2>Web API</h2><p>Live runs need your own model key in the <span class="mono">X-LLM-Key</span> header, with your name, provider and model in the body. The key gets checked with its provider, used for that one run and then dropped. <a href="${base}/api/docs" target="_blank" rel="noopener">Interactive API docs</a></p></div></header>
         <div class="endpoints reveal">
-          <div class="ep head"><span>Method</span><span>Path</span><span>What it does</span><span>Demo code</span></div>
-          ${EP.map(([m, p, w, need]) => `<div class="ep"><span class="method ${m === "POST" ? "post" : ""}">${m}</span><span class="path">${esc(p)}</span><span class="what">${esc(w)}</span><span class="lockcell ${need ? "need" : ""}">${icon(need ? "lock" : "unlock")}${need ? "needed" : "open"}</span></div>`).join("")}
+          <div class="ep head"><span>Method</span><span>Path</span><span>What it does</span><span>Access</span></div>
+          ${EP.map(([m, p, w, need]) => `<div class="ep"><span class="method ${m === "POST" ? "post" : ""}">${m}</span><span class="path">${esc(p)}</span><span class="what">${esc(w)}</span><span class="lockcell ${need ? "need" : ""}">${icon(need ? "key" : "unlock")}${need ? "your key" : "open"}</span></div>`).join("")}
         </div>
-        <div class="card dev-card reveal" style="margin-top:16px"><h3>${icon("terminal")}Run an alert from a terminal</h3><p class="muted" style="margin:0">Streams one line per finished step, then the full result.</p>${codeBlock(curlRun, true)}</div>
+        <div class="card dev-card reveal" style="margin-top:16px"><h3>${icon("terminal")}Run an alert from a terminal</h3><p class="muted" style="margin:0">Streams one event per finished step, then the full result. Swap in any provider from <span class="mono">/api/providers</span>.</p>${codeBlock(curlRun, true)}</div>
       </section>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">02</span><div><h2>A2A: let another agent call this one</h2><p>Agents find it through the <a href="${base}/.well-known/agent-card.json" target="_blank" rel="noopener">Agent Card</a> (A2A protocol v1.0), then send a <span class="mono">SendMessage</span> request. The answer is a completed Task with the plan as Markdown and as JSON.</p></div></header>
+        <header class="block-head reveal"><div><h2>A2A: let another agent call this one</h2><p>Agents find it through the <a href="${base}/.well-known/agent-card.json" target="_blank" rel="noopener">Agent Card</a> (A2A protocol v1.0), then send a <span class="mono">SendMessage</span> request with their own key in the headers. The answer is a completed Task with the plan as Markdown and as JSON.</p></div></header>
         <div class="card dev-card reveal">${codeBlock(a2a, true).replace('class="codewrap"', 'class="codewrap" style="margin-top:0"')}</div>
       </section>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">03</span><div><h2>MCP: give Claude these tools</h2><p>Clone the repository, install it, then add the server. Tools: <span class="mono">lookup_technique</span> and <span class="mono">search_techniques</span> (no keys needed), and <span class="mono">alert_to_playbook</span> (needs a Groq key).</p></div></header>
+        <header class="block-head reveal"><div><h2>MCP: give Claude these tools</h2><p>Clone the repository, install it, then add the server. Tools: <span class="mono">lookup_technique</span> and <span class="mono">search_techniques</span> (no keys needed), and <span class="mono">alert_to_playbook</span> (needs a Groq key).</p></div></header>
         <div class="card dev-card reveal">${codeBlock("claude mcp add alert2playbook -- python -m alert2playbook.mcp_server", true).replace('class="codewrap"', 'class="codewrap" style="margin-top:0"')}</div>
       </section>
 
       <section class="block">
-        <header class="block-head reveal"><span class="idx">04</span><div><h2>Built with</h2></div></header>
+        <header class="block-head reveal"><div><h2>Built with</h2></div></header>
         <div class="reveal"><div class="stack">${stack.map((s) => `<span class="tag">${esc(s)}</span>`).join("")}</div>
         <p style="margin-top:18px"><a class="link-btn" href="https://github.com/M-AbubakarNadeem/Alert2Playbook" target="_blank" rel="noopener">Source code and the 11-page guide on GitHub${icon("arrow-right")}</a></p></div>
       </section>`;
@@ -1109,12 +1209,14 @@
     moveInd(false);
     observe();
 
-    const [samples, health, results] = await Promise.all([
+    const [samples, health, results, providers] = await Promise.all([
       fetch("/api/samples").then((r) => r.json()).catch(() => []),
       fetch("/api/health").then((r) => r.json()).catch(() => null),
       fetch("/results.json").then((r) => r.json()).catch(() => null),
+      fetch("/api/providers").then((r) => r.json()).catch(() => ({ providers: [] })),
     ]);
-    S.samples = samples; S.health = health; S.results = results;
+    S.samples = samples; S.health = health; S.results = results; S.providers = providers.providers || [];
+    renderProviders(); renderReady();
     S.storyRun = samples.find((s) => s.id === "ransomware-precursor")?.run || null;
     renderPicks(); renderLock();
     if (S.samples.length) pickSample(0, $(".q-item"));
