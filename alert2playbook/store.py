@@ -61,6 +61,15 @@ class _Memory:
         with self.lock:
             return self.runs[:n]
 
+    def remove(self, raw: str, provider: str, status: str) -> bool:
+        with self.lock:
+            if raw not in self.runs:
+                return False
+            self.runs.remove(raw)
+            self.hashes["a2p:count:provider"][provider] -= 1
+            self.hashes["a2p:count:status"][status] -= 1
+            return True
+
     def counts(self) -> dict:
         with self.lock:
             return {"provider": dict(self.hashes["a2p:count:provider"]), "status": dict(self.hashes["a2p:count:status"])}
@@ -148,6 +157,30 @@ class Store:
             except (ValueError, TypeError):
                 continue
         return out
+
+    def delete_runs(self, ids: set[str]) -> int:
+        """Removes the log entries with these ids. Returns how many were removed."""
+        if not ids:
+            return 0
+        res = self._pipe(["LRANGE", RUNS_KEY, 0, -1])
+        raw_items = res[0] if res is not None else self.mem.recent(MAX_RUNS_KEPT)
+        removed = 0
+        for raw in raw_items or []:
+            try:
+                rec = json.loads(raw)
+            except (ValueError, TypeError):
+                continue
+            if rec.get("id") not in ids:
+                continue
+            provider, status = str(rec.get("provider", "?")), str(rec.get("status", "?"))
+            if res is not None:
+                out = self._pipe(["LREM", RUNS_KEY, 1, raw])
+                if out and out[0]:
+                    self._pipe(["HINCRBY", "a2p:count:provider", provider, -1], ["HINCRBY", "a2p:count:status", status, -1])
+                    removed += 1
+            else:
+                removed += int(self.mem.remove(raw, provider, status))
+        return removed
 
     def counts(self) -> dict:
         res = self._pipe(["HGETALL", "a2p:count:provider"], ["HGETALL", "a2p:count:status"])

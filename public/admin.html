@@ -32,6 +32,7 @@
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
     <symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5l1-12.5"/></symbol>
     <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
   </defs>
 </svg>
@@ -116,6 +117,7 @@
         </div>
       </div>
       <p class="fine keynote"><svg class="i"><use href="#i-lock"/></svg>Keys are never stored, so they can't be shown in full. You see the first and last 4 characters, plus a fingerprint that tells you when the same key comes back.</p>
+      <div class="selbar" id="selbar" hidden aria-live="polite"></div>
       <div class="table-scroll"><table class="t runs" id="runs"></table></div>
       <p class="fine" id="count"></p>
     </section>
