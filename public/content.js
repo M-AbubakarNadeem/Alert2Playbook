@@ -99,7 +99,7 @@ A2P.NODES = [
     detail: "Every run is written to a log: what each model received, what it answered, how long it took and how many tokens it used. Used to find bugs, measure speed, and replay inputs for the search study.",
     tech: "LangSmith tracing, project \"alert2playbook\". Sent in the background, so it never slows a run." },
   { id: "github", area: "gh", icon: "github", name: "GitHub", short: "Code, tests and docs",
-    detail: "The full source code, the 75 tests, the evaluation, the benchmark and a 12-page plain-English guide. Anyone can read it.",
+    detail: "The full source code, the 80 tests, the evaluation, the benchmark and a 12-page plain-English guide. Anyone can read it.",
     tech: "github.com/M-AbubakarNadeem/Alert2Playbook, MIT licence." },
 ];
 

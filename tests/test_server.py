@@ -50,8 +50,6 @@ def client(monkeypatch):
     monkeypatch.setenv("A2P_ADMIN_USER", "abubakar")
     monkeypatch.setenv("A2P_ADMIN_PASSWORD_HASH", admin.hash_password(PASSWORD))
     monkeypatch.setenv("A2P_ADMIN_SESSION_SECRET", "k" * 64)
-    server._runs.clear()
-    server._unlock_tries.clear()
     return TestClient(server.app)
 
 
@@ -81,8 +79,8 @@ def test_unlock_checks_the_code(client):
 
 
 def test_unlock_attempts_are_limited(client):
-    for _ in range(server.MAX_UNLOCK_TRIES):
-        client.post("/api/unlock", json={"code": "wrong"})
+    for _ in range(server.CODE_FAILS_PER_IP_15MIN):
+        assert client.post("/api/unlock", json={"code": "wrong"}).status_code == 401
     assert client.post("/api/unlock", json={"code": CODE}).status_code == 429
 
 
@@ -91,6 +89,55 @@ def test_live_run_needs_a_code_or_a_key(client):
     assert r.status_code == 401 and "own API key" in r.json()["detail"]
     assert client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": "wrong"}).status_code == 401
     assert client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": CODE}).status_code == 200
+
+
+def test_wrong_codes_on_any_endpoint_lock_out_every_endpoint(client):
+    """Guesses at /api/run, /api/feedback and /a2a count together with /api/unlock, and once
+    the limit is reached even the right code is refused, so trying many codes gets nowhere."""
+    for i in range(server.CODE_FAILS_PER_IP_15MIN // 2):
+        assert client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": f"guess-{i}"}).status_code == 401
+        assert client.post("/a2a", json={"jsonrpc": "2.0", "id": 1, "method": "SendMessage", "params": {}},
+                           headers={"X-Demo-Code": f"guess-a2a-{i}"}).status_code == 401
+    r = client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": CODE})
+    assert r.status_code == 429 and "wrong demo codes" in r.json()["detail"]
+    assert client.post("/api/unlock", json={"code": CODE}).status_code == 429
+    # someone at another address is not affected
+    assert client.post("/api/unlock", json={"code": CODE}, headers={"x-real-ip": "203.0.113.9"}).json() == {"ok": True}
+
+
+def test_only_real_guesses_count(client):
+    """A request with no code at all, or with the right code, is not a guess."""
+    for _ in range(server.CODE_FAILS_PER_IP_15MIN + 5):
+        assert client.post("/api/run", json={"alert": ALERT}).status_code == 401
+    for _ in range(server.CODE_FAILS_PER_IP_15MIN + 1):
+        assert client.post("/api/unlock", json={"code": CODE}).status_code == 200
+    assert client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": CODE}).status_code == 200
+
+
+def test_wrong_codes_are_also_limited_for_the_whole_site(client, monkeypatch):
+    """Spreading guesses over many addresses hits the site-wide limit."""
+    monkeypatch.setattr(server, "CODE_FAILS_PER_HOUR", 5)
+    for i in range(5):
+        assert client.post("/api/unlock", json={"code": "wrong"}, headers={"x-real-ip": f"198.51.100.{i}"}).status_code == 401
+    assert client.post("/api/unlock", json={"code": CODE}, headers={"x-real-ip": "198.51.100.99"}).status_code == 429
+
+
+def test_owner_runs_are_limited_in_the_shared_store(client):
+    for _ in range(server.OWNER_RUNS_PER_IP_10MIN):
+        assert client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": CODE}).status_code == 200
+    r = client.post("/api/run", json={"alert": ALERT}, headers={"X-Demo-Code": CODE})
+    assert r.status_code == 429 and "per 10 minutes" in r.json()["detail"]
+
+
+def test_api_docs_page_loads_its_files_from_this_site(client):
+    """The page must work under the site's Content-Security-Policy: no inline script, no CDN."""
+    html = client.get("/api/docs").text
+    assert '<script src="/swagger/swagger-ui-bundle.js"></script>' in html and '<script src="/swagger/init.js"></script>' in html
+    assert "<script>" not in html and "cdn." not in html
+    public = server.ROOT / "public" / "swagger"
+    assert all((public / f).exists() for f in ("swagger-ui-bundle.js", "swagger-ui.css", "init.js", "LICENSE"))
+    assert client.get("/api/openapi.json").json()["info"]["title"] == "Alert2Playbook"
+    assert client.get("/redoc").status_code == 404
 
 
 # ---------------------------------------------------------------- visitor keys

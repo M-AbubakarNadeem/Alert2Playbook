@@ -46,6 +46,8 @@ What *is* kept, so the dashboard can show which providers people use:
 | A masked copy | `gsk_••••••••a1b2` | Only the first and last 4 characters, the way providers show keys in their own consoles. It can't be used for anything. |
 | A fingerprint | `7f3a9c21b04e` | A one-way code made from the key and a secret only the server knows. It tells you when the same key comes back, but it can't be turned back into the key. |
 
+**Your alert is kept too, somewhere else.** Every run, yours included, is recorded in my LangSmith project: the alert, what each agent answered, which model it used and how long it took. Never the key. I use these records to find and fix problems, and the page says so next to the key box. So run the samples, or alerts you made up, rather than real alerts from a company.
+
 ## Limits
 
 These stop one person from using up the shared parts (the Pinecone search and the LangSmith logbook, which are on my free plans):
@@ -55,6 +57,7 @@ These stop one person from using up the shared parts (the Pinecone search and th
 | Live runs per visitor | 10 per hour |
 | Live runs per key | 20 per hour |
 | Live runs for the whole site | 300 per day |
+| Wrong demo codes | 10 per 15 minutes per visitor, 100 per hour for the whole site |
 | Key checks per visitor | 20 per hour |
 
 Limits are counted in a small shared database (**Upstash Redis**), so they hold even though the site runs on many short-lived serverless copies at once. A visitor is counted by a fingerprint of their address, not the address itself.
