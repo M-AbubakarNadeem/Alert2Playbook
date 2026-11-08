@@ -20,13 +20,11 @@ It takes about seven seconds, and every step shows its work.
 ![Tests](https://img.shields.io/badge/tests-85%20passing-success)
 ![Licence](https://img.shields.io/badge/licence-MIT-blue)
 
-</div>
-
-## Watch the demo
-
-A four and a half minute walk-through with captions and no sound. It starts with the problem, then shows a live run from raw alert to reviewed plan, opens a step to see exactly what went in and out, asks for a change in plain English, and ends with how it's built and how it was tested.
-
 https://github.com/user-attachments/assets/168ee986-c32f-4d45-b223-5031fcb7a16e
+
+<sub>A four and a half minute walk-through with captions and no sound: the problem, a live run from raw alert to reviewed plan, one step opened up, a change asked for in plain English, and how it's built and tested.</sub>
+
+</div>
 
 ---
 
