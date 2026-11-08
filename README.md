@@ -20,8 +20,6 @@ It takes about seven seconds, and every step shows its work.
 ![Tests](https://img.shields.io/badge/tests-85%20passing-success)
 ![Licence](https://img.shields.io/badge/licence-MIT-blue)
 
-<img src="docs/screenshots/hero.png" alt="The Alert2Playbook home page, with a saved run replaying on the right" width="100%">
-
 </div>
 
 ## Watch the demo
