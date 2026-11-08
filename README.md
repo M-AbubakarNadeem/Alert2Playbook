@@ -24,6 +24,12 @@ It takes about seven seconds, and every step shows its work.
 
 </div>
 
+## Watch the demo
+
+A four and a half minute walk-through with captions and no sound. It starts with the problem, then shows a live run from raw alert to reviewed plan, opens a step to see exactly what went in and out, asks for a change in plain English, and ends with how it's built and how it was tested.
+
+https://github.com/user-attachments/assets/168ee986-c32f-4d45-b223-5031fcb7a16e
+
 ---
 
 ## What it actually does
