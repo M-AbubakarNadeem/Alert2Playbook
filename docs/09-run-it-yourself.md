@@ -19,7 +19,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-74 tests in about 15 seconds. They use the real knowledge graph, a scripted fake AI and fake provider replies, so they need no internet and no keys. They check the knowledge graph, the search, every guard on page 6, the critic loop, the analyst feedback loop, the demo-code lock, visitor keys (format checks, the provider check, that a key never ends up in a log or an error), the dashboard login and the MCP server. A line of green dots and "74 passed" means everything works.
+75 tests in about 15 seconds. They use the real knowledge graph, a scripted fake AI and fake provider replies, so they need no internet and no keys. They check the knowledge graph, the search, every guard on page 6, the critic loop, the analyst feedback loop, the demo-code lock, visitor keys (format checks, the provider check, that a key never ends up in a log or an error), the dashboard login, deleting dashboard entries and the MCP server. A line of green dots and "75 passed" means everything works.
 
 The tests never read your secrets file, so they can't touch your real database or keys.
 
