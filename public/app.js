@@ -1185,7 +1185,7 @@
       <section class="block">
         <header class="block-head reveal"><div><h2>Built with</h2></div></header>
         <div class="reveal"><div class="stack">${stack.map((s) => `<span class="tag">${esc(s)}</span>`).join("")}</div>
-        <p style="margin-top:18px"><a class="link-btn" href="https://github.com/M-AbubakarNadeem/Alert2Playbook" target="_blank" rel="noopener">Source code and the 11-page guide on GitHub${icon("arrow-right")}</a></p></div>
+        <p style="margin-top:18px"><a class="link-btn" href="https://github.com/M-AbubakarNadeem/Alert2Playbook" target="_blank" rel="noopener">Source code and the 12-page guide on GitHub${icon("arrow-right")}</a></p></div>
       </section>`;
   }
 

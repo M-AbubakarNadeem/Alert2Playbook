@@ -70,6 +70,8 @@ At `/admin` there is a page only I can open. It shows:
 
 It has a search box, filters, and a CSV download.
 
+I can also delete entries, for example my own test runs. Each row has a tick box, and one box at the top ticks every row the filters show. Pressing **Delete** asks once more on the page before anything goes. The provider totals go down to match, so the shares stay right. Only a signed-in session can delete, and a delete request sent from another website is refused, the same as a sign-in.
+
 ### How the login works
 
 There is one username and one password. The password itself is never stored anywhere on the server. Vercel only has a **hash** of it, made with scrypt, a method that is deliberately slow so guesses are expensive.

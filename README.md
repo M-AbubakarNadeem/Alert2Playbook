@@ -17,7 +17,7 @@ It takes about seven seconds, and every step shows its work.
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.156-009688?logo=fastapi&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-gpt--oss%20%C2%B7%20Qwen-F55036)
 ![Pinecone](https://img.shields.io/badge/Pinecone-hybrid%20search-000000)
-![Tests](https://img.shields.io/badge/tests-74%20passing-success)
+![Tests](https://img.shields.io/badge/tests-75%20passing-success)
 ![Licence](https://img.shields.io/badge/licence-MIT-blue)
 
 <img src="docs/screenshots/hero.png" alt="The Alert2Playbook home page, with a saved run replaying on the right" width="100%">
@@ -240,7 +240,7 @@ alert2playbook/
 └── mcp_server.py    the three MCP tools
 server.py            the web API
 public/              the site and the dashboard
-tests/               74 tests, all offline
+tests/               75 tests, all offline
 eval/  benchmarks/   the accuracy test, the search study and the CrewAI comparison
 docs/                twelve short pages explaining all of it
 ```
@@ -259,7 +259,7 @@ cd Alert2Playbook
 python -m venv .venv
 .venv\Scripts\activate          # macOS or Linux: source .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest                          # 74 tests, no keys, no internet
+pytest                          # 75 tests, no keys, no internet
 ```
 
 To run the agents, copy `.env.example` to `.env` and add a free Groq key. Pinecone and LangSmith are optional.
