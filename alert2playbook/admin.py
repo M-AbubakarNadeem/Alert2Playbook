@@ -6,6 +6,11 @@ carries the username, an expiry time and a stamp of the current password hash, s
 changing the password signs every session out. Nothing is kept on the server, which
 suits serverless functions.
 
+A successful login also gets a "known browser" token (OWASP's device cookie). It
+grants no access by itself. It only means that browser has its own allowance of wrong
+passwords, so someone spamming wrong passwords from elsewhere can't lock the owner out.
+It is signed the same way, lasts 180 days, and also dies when the password changes.
+
 Environment:
   A2P_ADMIN_USER            the username
   A2P_ADMIN_PASSWORD_HASH   from hash_password() (scripts/make_admin.py writes it)
@@ -23,6 +28,8 @@ import time
 
 SESSION_TTL = 8 * 3600
 COOKIE = "a2p_admin"
+DEVICE_TTL = 180 * 86400
+DEVICE_COOKIE = "a2p_device"
 _N, _R, _P, _LEN = 2**14, 8, 1, 32
 
 
@@ -107,3 +114,38 @@ def read_session(token: str | None, now: float | None = None) -> str | None:
     if who != user or stamp != _stamp(pw_hash) or int(exp) < (now or time.time()):
         return None
     return who
+
+
+def _sign(secret: bytes, payload: str) -> str:
+    return _b64(hmac.new(secret, payload.encode(), hashlib.sha256).digest())
+
+
+def make_device(now: float | None = None) -> str:
+    """A known-browser token: "device", a random id, the username, an expiry and the
+    password stamp. The "device" label keeps it from ever passing as a session token."""
+    cfg = _config()
+    if not cfg:
+        raise RuntimeError("admin login is not configured")
+    user, pw_hash, secret = cfg
+    exp = int((now or time.time()) + DEVICE_TTL)
+    payload = _b64(f"device|{secrets.token_hex(8)}|{user}|{exp}|{_stamp(pw_hash)}".encode())
+    return f"{payload}.{_sign(secret, payload)}"
+
+
+def read_device(token: str | None, now: float | None = None) -> str | None:
+    """The browser's id if the token is genuine, unexpired and from the current password."""
+    cfg = _config()
+    if not cfg or not token or token.count(".") != 1:
+        return None
+    user, pw_hash, secret = cfg
+    payload, sig = token.split(".")
+    if not hmac.compare_digest(_sign(secret, payload), sig):
+        return None
+    try:
+        kind, device, who, exp, stamp = _unb64(payload).decode().split("|")
+        expired = int(exp) < (now or time.time())
+    except (ValueError, UnicodeDecodeError):
+        return None
+    if kind != "device" or who != user or stamp != _stamp(pw_hash) or expired:
+        return None
+    return device

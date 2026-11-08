@@ -41,6 +41,11 @@ class _Memory:
             self.counters[key] = (n, exp)
             return n
 
+    def peek(self, key: str) -> int:
+        with self.lock:
+            n, exp = self.counters.get(key, (0, 0.0))
+            return n if exp > time.time() else 0
+
     def set(self, key: str, value: str, ttl: int) -> None:
         with self.lock:
             self.values[key] = (value, time.time() + ttl)
@@ -124,6 +129,12 @@ class Store:
         res = self._pipe(["INCR", key], ["EXPIRE", key, window + 5])
         n = int(res[0]) if res else self.mem.incr(key, window)
         return n <= limit
+
+    def peek(self, scope: str, ident: str, window: int) -> int:
+        """How many uses hit() has counted in the current window, without counting one more."""
+        key = f"a2p:rl:{scope}:{ident}:{int(time.time() // window)}"
+        res = self._pipe(["GET", key])
+        return int(res[0] or 0) if res is not None else self.mem.peek(key)
 
     # ---- short-lived values (a key that passed its check recently)
     def remember(self, key: str, ttl: int) -> None:

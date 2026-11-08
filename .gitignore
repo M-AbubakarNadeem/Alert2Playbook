@@ -20,3 +20,6 @@ eval/results/triage-cache.json
 
 # vercel (the CLI also writes .env.local, covered by .env.* above)
 .vercel/
+
+# Local security audit reports
+.gstack/

@@ -9,6 +9,7 @@ Python function; the page in public/ is served from Vercel's CDN.
     POST /api/run        {alert, visitor?}           run the graph, streamed as server-sent events   [access]
     POST /api/feedback   {state, feedback, visitor?} analyst-requested revision, streamed            [access]
     POST /api/markdown   {state}                     playbook as Markdown
+    GET  /api/docs                                   interactive API docs (Swagger UI served from public/swagger)
     GET  /.well-known/agent-card.json                A2A Agent Card
     POST /a2a                                        A2A JSON-RPC endpoint (SendMessage)             [access]
 
@@ -34,14 +35,14 @@ import re
 import secrets
 import sys
 import time
-from collections import Counter, defaultdict, deque
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import unquote
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parent
@@ -60,7 +61,26 @@ from alert2playbook.render import playbook_markdown  # noqa: E402
 from alert2playbook.service import get_base, get_service, visitor_graph  # noqa: E402
 from alert2playbook.store import get_store  # noqa: E402
 
-app = FastAPI(title="Alert2Playbook", version=__version__, docs_url="/api/docs", openapi_url="/api/openapi.json")
+app = FastAPI(title="Alert2Playbook", version=__version__, docs_url=None, redoc_url=None, openapi_url="/api/openapi.json")
+
+# FastAPI's own docs page loads Swagger UI from a CDN and starts it with an inline script,
+# which the site's Content-Security-Policy blocks. This one uses the copy in public/swagger.
+DOCS_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alert2Playbook API</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/swagger/swagger-ui.css">
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="/swagger/swagger-ui-bundle.js"></script>
+<script src="/swagger/init.js"></script>
+</body>
+</html>
+"""
 
 SAMPLES = json.loads((ROOT / "data" / "samples.json").read_text(encoding="utf-8"))
 SAMPLE_RUNS = ROOT / "data" / "sample_runs"
@@ -82,19 +102,21 @@ async def security_headers(request: Request, call_next):
 
 
 # --------------------------------------------------------------------- limits
-# Owner runs: a best-effort per-IP limit per serverless instance, as before.
-WINDOW_S, MAX_RUNS, MAX_UNLOCK_TRIES = 600, 8, 10
-_runs: dict[str, deque] = defaultdict(deque)
-_unlock_tries: dict[str, deque] = defaultdict(deque)
-
-# Visitor runs and logins use the shared store, so the limits hold across instances.
-# They also protect the owner's free Pinecone and LangSmith quotas.
+# Every limit is counted in the shared store, so it holds across all serverless instances.
+# They also protect the owner's paid Groq key and free Pinecone and LangSmith quotas.
+OWNER_RUNS_PER_IP_10MIN = 8
+CODE_FAILS_PER_IP_15MIN = 10      # wrong demo codes, per visitor
+CODE_FAILS_PER_HOUR = 100         # wrong demo codes, whole site, so many addresses can't share the guessing
 VISITOR_RUNS_PER_IP_HOUR = 10
 VISITOR_RUNS_PER_KEY_HOUR = 20
 VISITOR_RUNS_PER_DAY = 300
 KEY_CHECKS_PER_IP_HOUR = 20
-LOGINS_PER_IP_15MIN = 5
-LOGINS_PER_HOUR = 30
+# Dashboard sign-ins: only wrong passwords count. A browser the owner has signed in from
+# before has its own allowance, so a flood of wrong passwords from elsewhere can't lock
+# the owner out. Browsers the site doesn't know share the per-address and site-wide limits.
+LOGIN_FAILS_PER_IP_15MIN = 5
+LOGIN_FAILS_NEW_BROWSERS_PER_HOUR = 30
+LOGIN_FAILS_PER_KNOWN_BROWSER_15MIN = 10
 
 
 def client_ip(request: Request) -> str:
@@ -108,19 +130,9 @@ def visitor_id(request: Request) -> str:
     return fingerprint("ip:" + client_ip(request))
 
 
-def _within_limit(store: dict[str, deque], request: Request, limit: int) -> bool:
-    now, q = time.time(), store[client_ip(request)]
-    while q and now - q[0] > WINDOW_S:
-        q.popleft()
-    if len(q) >= limit:
-        return False
-    q.append(now)
-    return True
-
-
 def check_rate(request: Request) -> None:
-    if not _within_limit(_runs, request, MAX_RUNS):
-        raise HTTPException(429, "Too many live runs from this address: 8 per 10 minutes. Samples still open instantly.")
+    if not get_store().hit("owner-run", visitor_id(request), OWNER_RUNS_PER_IP_10MIN, 600):
+        raise HTTPException(429, f"Too many live runs from this address: {OWNER_RUNS_PER_IP_10MIN} per 10 minutes. Samples still open instantly.")
 
 
 def code_ok(given: str | None) -> bool:
@@ -128,9 +140,27 @@ def code_ok(given: str | None) -> bool:
     return not code or hmac.compare_digest((given or "").encode(), code.encode())
 
 
+def check_demo_code(request: Request, given: str | None, wrong: str) -> None:
+    """Checks the owner's demo code on every endpoint that accepts it. Wrong guesses are
+    counted per visitor and for the whole site, and past the limit even the right code is
+    refused for a while, so the code can't be found by trying many."""
+    if not given:
+        if code_ok(None):  # this server has no demo code: live runs are open
+            return
+        raise HTTPException(401, wrong)
+    store, who = get_store(), visitor_id(request)
+    if store.peek("code-fail-ip", who, 900) >= CODE_FAILS_PER_IP_15MIN or store.peek("code-fail-all", "all", 3600) >= CODE_FAILS_PER_HOUR:
+        raise HTTPException(429, "Too many wrong demo codes. Try again later, or run it with your own API key.")
+    if code_ok(given):
+        return
+    store.hit("code-fail-ip", who, CODE_FAILS_PER_IP_15MIN, 900)
+    store.hit("code-fail-all", "all", CODE_FAILS_PER_HOUR, 3600)
+    raise HTTPException(401, wrong)
+
+
 def require_demo_code(request: Request) -> None:
-    if not code_ok(request.headers.get(DEMO_CODE_HEADER)):
-        raise HTTPException(401, "Live runs need your own API key (or the owner's demo code). You can also watch a saved run.")
+    check_demo_code(request, request.headers.get(DEMO_CODE_HEADER),
+                    "Live runs need your own API key (or the owner's demo code). You can also watch a saved run.")
 
 
 def same_origin(request: Request) -> None:
@@ -396,11 +426,8 @@ def keys_check(body: KeyCheckRequest, request: Request):
 
 @app.post("/api/unlock")
 def unlock(body: UnlockRequest, request: Request):
-    """Lets the page check the owner's demo code before using it. Attempts are rate limited."""
-    if not _within_limit(_unlock_tries, request, MAX_UNLOCK_TRIES):
-        raise HTTPException(429, "Too many attempts. Wait 10 minutes.")
-    if not code_ok(body.code.strip()):
-        raise HTTPException(401, "That demo code is not right.")
+    """Lets the page check the owner's demo code before using it. Wrong guesses are limited."""
+    check_demo_code(request, body.code.strip(), "That demo code is not right.")
     return {"ok": True}
 
 
@@ -448,6 +475,11 @@ def markdown(body: MarkdownRequest):
         return playbook_markdown(body.state, get_kb())
     except (KeyError, TypeError, AttributeError) as exc:
         raise HTTPException(400, f"state is missing {exc}") from exc
+
+
+@app.get("/api/docs", include_in_schema=False)
+def api_docs():
+    return HTMLResponse(DOCS_HTML)
 
 
 @app.get("/.well-known/agent-card.json")
@@ -511,13 +543,24 @@ def admin_login(body: LoginRequest, request: Request, response: Response):
     store = get_store()
     if not admin.configured():
         raise HTTPException(503, "The dashboard login isn't set up on this server.")
-    if not store.hit("login-ip", visitor_id(request), LOGINS_PER_IP_15MIN, 900) or not store.hit("login-all", "all", LOGINS_PER_HOUR, 3600):
-        raise HTTPException(429, "Too many sign-in attempts. Wait 15 minutes.")
+    device = admin.read_device(request.cookies.get(admin.DEVICE_COOKIE))
+    if device:
+        limits = [("login-fail-device", device, LOGIN_FAILS_PER_KNOWN_BROWSER_15MIN, 900)]
+    else:
+        limits = [("login-fail-ip", visitor_id(request), LOGIN_FAILS_PER_IP_15MIN, 900),
+                  ("login-fail-new", "all", LOGIN_FAILS_NEW_BROWSERS_PER_HOUR, 3600)]
+    if any(store.peek(scope, ident, window) >= limit for scope, ident, limit, window in limits):
+        raise HTTPException(429, "Too many wrong passwords from this browser. Wait 15 minutes." if device else
+                            "Too many wrong sign-ins. Try again later, or use a browser you've signed in from before.")
     if not admin.check_login(body.username.strip(), body.password):
+        for scope, ident, limit, window in limits:
+            store.hit(scope, ident, limit, window)
         time.sleep(0.4)
         raise HTTPException(401, "Wrong username or password.")
     secure = base_url(request).startswith("https://")
-    response.set_cookie(admin.COOKIE, admin.make_session(), max_age=admin.SESSION_TTL, httponly=True, secure=secure, samesite="strict", path="/api/admin")
+    cookie = {"httponly": True, "secure": secure, "samesite": "strict", "path": "/api/admin"}
+    response.set_cookie(admin.COOKIE, admin.make_session(), max_age=admin.SESSION_TTL, **cookie)
+    response.set_cookie(admin.DEVICE_COOKIE, admin.make_device(), max_age=admin.DEVICE_TTL, **cookie)
     return {"ok": True}
 
 
