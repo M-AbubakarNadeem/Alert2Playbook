@@ -87,9 +87,16 @@ When I sign in, the server gives my browser a **session cookie** that:
 - is `SameSite=Strict`, so other websites can't use it;
 - is only sent to `/api/admin`.
 
-Changing the password signs every session out at once. Sign-in attempts are limited to 5 per 15 minutes per visitor and 30 per hour in total, and sign-ins coming from another website are refused.
+Changing the password signs every session out at once. Sign-ins coming from another website are refused.
 
-`scripts/make_admin.py` creates the login and saves it to my secrets file. It never prints the password.
+Wrong passwords are limited, and only wrong ones count, so signing in many times is fine. The trick is that a limit must stop guessing without letting a stranger lock me out:
+
+- After I sign in, my browser also gets a **known-browser cookie**: signed like the session cookie, `HttpOnly`, lasts 180 days. It doesn't open the dashboard by itself. It only means that browser gets its own allowance of 10 wrong passwords per 15 minutes.
+- Browsers the site doesn't know share two limits: 5 wrong passwords per 15 minutes per address, and 30 per hour for all of them together.
+- So if someone floods the login with wrong passwords from many addresses, they only block other unknown browsers. My browser still gets in.
+- Changing the password also cancels every known-browser cookie.
+
+`scripts/make_admin.py` creates the login with a long random password and saves it to my secrets file, so guessing it was never realistic; the limits keep it that way. The script never prints the password.
 
 ## The rest of the protection
 

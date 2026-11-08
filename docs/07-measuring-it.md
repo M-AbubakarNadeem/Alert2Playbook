@@ -13,7 +13,7 @@ There are two kinds of tests:
 pytest
 ```
 
-80 tests, about 15 seconds, no keys needed. They use the real knowledge graph and search, plus a scripted fake AI and fake provider replies that return answers we choose. They check that:
+85 tests, about 15 seconds, no keys needed. They use the real knowledge graph and search, plus a scripted fake AI and fake provider replies that return answers we choose. They check that:
 
 - the knowledge graph covers Enterprise and ICS, and old revoked IDs lead to their replacements;
 - search finds the right technique from a behaviour description, and IDs written in the alert or exact technique names come first;
@@ -26,7 +26,7 @@ pytest
 - error messages shown to visitors or saved to results files have account IDs and key-shaped strings removed;
 - the demo-code lock: live runs and A2A calls are refused without the right code or a visitor key, wrong codes are refused, wrong guesses on every endpoint are counted per visitor and for the whole site (past the limit even the right code waits), and the Agent Card lists both ways in;
 - visitor keys: unknown providers, malformed keys and keys from the wrong provider are refused before any network call; only the provider's own "yes" lets a run start; redirects are never followed; a key never appears in the run log, an error or the dashboard's data; and any model can be driven, stepping down from forced tool calls to plain JSON when a model can't do them;
-- the dashboard login: passwords are only stored as hashes, sessions can't be forged or reused after they expire or the password changes, sign-ins are rate limited, and sign-ins from other sites are refused;
+- the dashboard login: passwords are only stored as hashes, sessions can't be forged or reused after they expire or the password changes, only wrong passwords count toward the sign-in limits, a flood of wrong passwords can't lock out a browser that has signed in before, known-browser cookies can't be faked and die when the password changes, and sign-ins from other sites are refused;
 - the interactive API docs page loads only files from this site, so it works under the strict Content Security Policy;
 - deleting dashboard entries: it needs a sign-in, requests from other sites and anything that isn't an entry id are refused, only the chosen entries go, and the totals drop to match.
 

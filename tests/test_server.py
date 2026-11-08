@@ -252,9 +252,57 @@ def test_logout_ends_the_session(client):
 
 
 def test_login_attempts_are_limited(client):
-    for _ in range(server.LOGINS_PER_IP_15MIN):
-        login(client, "wrong")
+    for _ in range(server.LOGIN_FAILS_PER_IP_15MIN):
+        assert login(client, "wrong").status_code == 401
     assert login(client).status_code == 429
+
+
+def test_only_wrong_passwords_count(client):
+    for _ in range(server.LOGIN_FAILS_PER_IP_15MIN + 3):
+        assert login(client).status_code == 200
+
+
+def test_a_flood_of_wrong_passwords_cannot_lock_the_owner_out(client, monkeypatch):
+    """Someone spamming wrong passwords from many addresses hits the limit for unknown
+    browsers, but the owner's browser, which has signed in before, still gets in."""
+    assert login(client).status_code == 200  # the owner's browser becomes a known browser
+    monkeypatch.setattr(server, "LOGIN_FAILS_NEW_BROWSERS_PER_HOUR", 5)
+    attacker = TestClient(server.app)
+    for i in range(5):
+        r = attacker.post("/api/admin/login", json={"username": "abubakar", "password": "guess"}, headers={"x-real-ip": f"198.51.100.{i}"})
+        assert r.status_code == 401
+    r = attacker.post("/api/admin/login", json={"username": "abubakar", "password": PASSWORD}, headers={"x-real-ip": "198.51.100.77"})
+    assert r.status_code == 429  # even the right password, from a browser the site doesn't know
+    assert login(client).status_code == 200  # the owner is not affected
+
+
+def test_a_known_browser_has_its_own_limit(client):
+    login(client)
+    for _ in range(server.LOGIN_FAILS_PER_KNOWN_BROWSER_15MIN):
+        assert login(client, "wrong").status_code == 401
+    r = login(client)
+    assert r.status_code == 429 and "this browser" in r.json()["detail"]
+
+
+def test_known_browser_cookie_is_locked_down_and_cannot_be_faked(client, monkeypatch):
+    r = login(client)
+    device = next(c for c in r.headers.get_list("set-cookie") if c.startswith(admin.DEVICE_COOKIE + "=")).lower()
+    assert "httponly" in device and "samesite=strict" in device and "path=/api/admin" in device and f"max-age={admin.DEVICE_TTL}" in device
+    token = client.cookies.get(admin.DEVICE_COOKIE)
+    assert admin.read_device(token)
+    payload, sig = token.split(".")
+    assert admin.read_device(f"{payload}.{sig[::-1]}") is None  # a changed signature
+    monkeypatch.setenv("A2P_ADMIN_PASSWORD_HASH", admin.hash_password("a brand new password for the dashboard"))
+    assert admin.read_device(token) is None  # a new password forgets every known browser
+
+
+def test_session_and_known_browser_tokens_cannot_stand_in_for_each_other(client):
+    login(client)
+    session, device = client.cookies.get(admin.COOKIE), client.cookies.get(admin.DEVICE_COOKIE)
+    assert admin.read_session(session) == "abubakar" and admin.read_device(device)
+    assert admin.read_session(device) is None and admin.read_device(session) is None
+    client.cookies.delete(admin.COOKIE)
+    assert client.get("/api/admin/overview").status_code == 401  # a known browser alone opens nothing
 
 
 def test_login_from_another_site_is_refused(client):

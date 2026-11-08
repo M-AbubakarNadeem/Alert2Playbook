@@ -17,7 +17,7 @@ It takes about seven seconds, and every step shows its work.
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.156-009688?logo=fastapi&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-gpt--oss%20%C2%B7%20Qwen-F55036)
 ![Pinecone](https://img.shields.io/badge/Pinecone-hybrid%20search-000000)
-![Tests](https://img.shields.io/badge/tests-80%20passing-success)
+![Tests](https://img.shields.io/badge/tests-85%20passing-success)
 ![Licence](https://img.shields.io/badge/licence-MIT-blue)
 
 <img src="docs/screenshots/hero.png" alt="The Alert2Playbook home page, with a saved run replaying on the right" width="100%">
@@ -204,7 +204,7 @@ The public site takes API keys from strangers and runs code that reads attacker-
 | **Visitor keys** | Only providers on a fixed list, with their addresses written into the code. Keys must be plain tokens of the right shape for that provider, then pass a free check with the provider itself. Used in memory for one run, never stored, never logged, and cut out of any error message. Requests never follow redirects. |
 | **What's kept** | A masked copy (`gsk_••••a1b2`) and a one-way fingerprint, so I can see which providers people use without holding a single working key. The alerts people run and the agents' answers go to my LangSmith project for debugging, and the page says so next to the key box. |
 | **Abuse limits** | 10 runs an hour per visitor, 20 per key, 300 a day for the whole site. Wrong demo codes: 10 per 15 minutes per visitor and 100 an hour for the whole site, after which even the right code waits. All counted in Upstash Redis so they hold across every serverless copy. |
-| **Owner dashboard** | One login. Only an scrypt hash of the password is on the server. The session cookie is signed, `HttpOnly`, `SameSite=Strict`, scoped to the admin API and lasts 8 hours. Sign-ins are rate limited, and ones from other sites are refused. |
+| **Owner dashboard** | One login. Only an scrypt hash of the password is on the server. The session cookie is signed, `HttpOnly`, `SameSite=Strict`, scoped to the admin API and lasts 8 hours. Only wrong passwords count toward the limits. A browser that has signed in before gets a signed known-browser cookie and its own allowance, so a flood of wrong passwords from elsewhere can't lock the owner out. Sign-ins from other sites are refused. |
 | **The page itself** | A strict Content Security Policy (scripts only from this site, plus one inline script pinned by its hash), HSTS, no framing, and every piece of AI or visitor text escaped before it's shown |
 | **Prompt injection** | Guard model, fenced prompts, no tools that act on systems |
 
@@ -246,7 +246,7 @@ alert2playbook/
 └── mcp_server.py    the three MCP tools
 server.py            the web API
 public/              the site and the dashboard
-tests/               80 tests, all offline
+tests/               85 tests, all offline
 eval/  benchmarks/   the accuracy test, the search study and the CrewAI comparison
 docs/                twelve short pages explaining all of it
 ```
@@ -265,7 +265,7 @@ cd Alert2Playbook
 python -m venv .venv
 .venv\Scripts\activate          # macOS or Linux: source .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest                          # 80 tests, no keys, no internet
+pytest                          # 85 tests, no keys, no internet
 ```
 
 To run the agents, copy `.env.example` to `.env` and add a free Groq key. Pinecone and LangSmith are optional.

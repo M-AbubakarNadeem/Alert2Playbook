@@ -111,8 +111,12 @@ VISITOR_RUNS_PER_IP_HOUR = 10
 VISITOR_RUNS_PER_KEY_HOUR = 20
 VISITOR_RUNS_PER_DAY = 300
 KEY_CHECKS_PER_IP_HOUR = 20
-LOGINS_PER_IP_15MIN = 5
-LOGINS_PER_HOUR = 30
+# Dashboard sign-ins: only wrong passwords count. A browser the owner has signed in from
+# before has its own allowance, so a flood of wrong passwords from elsewhere can't lock
+# the owner out. Browsers the site doesn't know share the per-address and site-wide limits.
+LOGIN_FAILS_PER_IP_15MIN = 5
+LOGIN_FAILS_NEW_BROWSERS_PER_HOUR = 30
+LOGIN_FAILS_PER_KNOWN_BROWSER_15MIN = 10
 
 
 def client_ip(request: Request) -> str:
@@ -539,13 +543,24 @@ def admin_login(body: LoginRequest, request: Request, response: Response):
     store = get_store()
     if not admin.configured():
         raise HTTPException(503, "The dashboard login isn't set up on this server.")
-    if not store.hit("login-ip", visitor_id(request), LOGINS_PER_IP_15MIN, 900) or not store.hit("login-all", "all", LOGINS_PER_HOUR, 3600):
-        raise HTTPException(429, "Too many sign-in attempts. Wait 15 minutes.")
+    device = admin.read_device(request.cookies.get(admin.DEVICE_COOKIE))
+    if device:
+        limits = [("login-fail-device", device, LOGIN_FAILS_PER_KNOWN_BROWSER_15MIN, 900)]
+    else:
+        limits = [("login-fail-ip", visitor_id(request), LOGIN_FAILS_PER_IP_15MIN, 900),
+                  ("login-fail-new", "all", LOGIN_FAILS_NEW_BROWSERS_PER_HOUR, 3600)]
+    if any(store.peek(scope, ident, window) >= limit for scope, ident, limit, window in limits):
+        raise HTTPException(429, "Too many wrong passwords from this browser. Wait 15 minutes." if device else
+                            "Too many wrong sign-ins. Try again later, or use a browser you've signed in from before.")
     if not admin.check_login(body.username.strip(), body.password):
+        for scope, ident, limit, window in limits:
+            store.hit(scope, ident, limit, window)
         time.sleep(0.4)
         raise HTTPException(401, "Wrong username or password.")
     secure = base_url(request).startswith("https://")
-    response.set_cookie(admin.COOKIE, admin.make_session(), max_age=admin.SESSION_TTL, httponly=True, secure=secure, samesite="strict", path="/api/admin")
+    cookie = {"httponly": True, "secure": secure, "samesite": "strict", "path": "/api/admin"}
+    response.set_cookie(admin.COOKIE, admin.make_session(), max_age=admin.SESSION_TTL, **cookie)
+    response.set_cookie(admin.DEVICE_COOKIE, admin.make_device(), max_age=admin.DEVICE_TTL, **cookie)
     return {"ok": True}
 
 
